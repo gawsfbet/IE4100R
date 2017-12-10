@@ -23,7 +23,7 @@ public class IE4100R {
         // TODO code application logic here
         model1();
     }
-    
+    //Example website: https://github.com/zonbeka/Cplex-Examples
     /*
     min 0.12x + 0.15y
     st. 60x + 60y >= 300

@@ -7,6 +7,7 @@ package Logic;
 
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
+import ilog.concert.IloLinearIntExpr;
 import ilog.cplex.IloCplex;
 
 /**
@@ -95,7 +96,34 @@ public class Solver {
         IloIntVar[] z = cplex.boolVarArray(I);
         
         //expressions
+        IloLinearIntExpr demandObjective = cplex.linearIntExpr();
+        for (int i = 0; i < F; i++) {
+            for (int j1 = 0; j1 < R; j1++) {
+                demandObjective.addTerm(1, c[j1][i]);
+            }
+            
+            for (int j2 = 0; j2 < M; j2++) {
+                demandObjective.addTerm(1, g[j2][i]);
+            }
+        }
+        
+        IloLinearIntExpr distanceObjective = cplex.linearIntExpr();
+        for (int i = 0; i < R; i++) {
+            distanceObjective.addTerms(d[i], w[i]);
+        }
+        for (int i = 0; i < M; i++) {
+            distanceObjective.addTerms(e[i], x[i]);
+        }
+        
+        IloLinearIntExpr lockerObjective = cplex.linearIntExpr();
+        for (int i = 0; i < F; i++) {
+            lockerObjective.addTerm(1, y[i]);
+        }
         //define objective
+        cplex.addMaximize(demandObjective);
+        cplex.addMinimize(distanceObjective);
+        cplex.addMinimize(lockerObjective);
+        
         //constraints
     }
 }
