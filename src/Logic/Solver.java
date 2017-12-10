@@ -180,5 +180,29 @@ public class Solver {
                 cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), S);
             }
         }
+        
+        //Capacity constraints
+        IloLinearIntExpr demandPerLocker = cplex.linearIntExpr();
+        for (int i = 0; i < F; i++) {
+            for (int i1 = 0; i1 < R; i1++) {
+                demandPerLocker.addTerm(1, c[i1][i]);
+            }
+            for (int i2 = 0; i2 < M; i2++) {
+                demandPerLocker.addTerm(1, g[i2][i]);
+            }
+            
+            cplex.addLe(demandPerLocker, C);
+        }
+        IloLinearIntExpr demandPerPop = cplex.linearIntExpr();
+        for (int i = 0; i < I; i++) {
+            for (int i1 = 0; i1 < R; i1++) {
+                demandPerPop.addTerm(1, c[i1][i]);
+            }
+            for (int i2 = 0; i2 < M; i2++) {
+                demandPerPop.addTerm(1, g[i2][i]);
+            }
+            
+            cplex.addLe(demandPerPop, C);
+        }
     }
 }
