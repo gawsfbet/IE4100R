@@ -98,12 +98,12 @@ public class Solver {
         //expressions
         IloLinearIntExpr demandObjective = cplex.linearIntExpr();
         for (int i = 0; i < F; i++) {
-            for (int j1 = 0; j1 < R; j1++) {
-                demandObjective.addTerm(1, c[j1][i]);
+            for (int i1 = 0; i1 < R; i1++) {
+                demandObjective.addTerm(1, c[i1][i]);
             }
             
-            for (int j2 = 0; j2 < M; j2++) {
-                demandObjective.addTerm(1, g[j2][i]);
+            for (int i2 = 0; i2 < M; i2++) {
+                demandObjective.addTerm(1, g[i2][i]);
             }
         }
         
@@ -125,5 +125,24 @@ public class Solver {
         cplex.addMinimize(lockerObjective);
         
         //constraints
+        //Demand constraints
+        for (int i = 0; i < R; i++) {
+            cplex.addGe(alpha * a[i], cplex.sum(cplex.sum(c[i]), cplex.sum(j[i])));
+        }
+        for (int i = 0; i < M; i++) {
+            cplex.addGe(beta * b[i], cplex.sum(cplex.sum(g[i]), cplex.sum(k[i])));
+        }
+        
+        //Binary constraints
+        for (int i = 0; i < R; i++) {
+            for (int i1 = 0; i1 < F; i1++) {
+                cplex.addLe(w[i][i1], y[i1]);
+            }
+        }
+        for (int i = 0; i < M; i++) {
+            for (int i1 = 0; i1 < F; i1++) {
+                cplex.addLe(x[i][i1], y[i1]);
+            }
+        }
     }
 }
