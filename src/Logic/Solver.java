@@ -144,5 +144,41 @@ public class Solver {
                 cplex.addLe(x[i][i1], y[i1]);
             }
         }
+        
+        //Flow constraints
+        for (int i = 0; i < R; i++) {
+            for (int i1 = 0; i1 < F; i++) {
+                cplex.addLe(c[i][i1], cplex.prod(T, w[i][i1]));
+            }
+            for (int i2 = 0; i2 < I; i++) {
+                cplex.addLe(j[i][i2], cplex.prod(T, n[i][i2]));
+            }
+        }
+        for (int i = 0; i < M; i++) {
+            for (int i1 = 0; i1 < F; i++) {
+                cplex.addLe(g[i][i1], cplex.prod(T, x[i][i1]));
+            }
+            for (int i2 = 0; i2 < I; i++) {
+                cplex.addLe(k[i][i2], cplex.prod(T, o[i][i2]));
+            }
+        }
+        
+        //Demand constraints
+        for (int i = 0; i < R; i++) {
+            for (int i1 = 0; i1 < F; i++) {
+                cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), S);
+            }
+            for (int i2 = 0; i2 < I; i++) {
+                cplex.addLe(cplex.prod(h[i][i2], n[i][i2]), S);
+            }
+        }
+        for (int i = 0; i < M; i++) {
+            for (int i1 = 0; i1 < F; i++) {
+                cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), S);
+            }
+            for (int i2 = 0; i2 < I; i++) {
+                cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), S);
+            }
+        }
     }
 }
