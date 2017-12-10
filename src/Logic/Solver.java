@@ -196,13 +196,29 @@ public class Solver {
         IloLinearIntExpr demandPerPop = cplex.linearIntExpr();
         for (int i = 0; i < I; i++) {
             for (int i1 = 0; i1 < R; i1++) {
-                demandPerPop.addTerm(1, c[i1][i]);
+                demandPerPop.addTerm(1, j[i1][i]);
             }
             for (int i2 = 0; i2 < M; i2++) {
-                demandPerPop.addTerm(1, g[i2][i]);
+                demandPerPop.addTerm(1, k[i2][i]);
             }
             
             cplex.addLe(demandPerPop, C);
+        }
+        
+        //Competition constraints
+        for (int i = 0; i < R; i++) {
+            for (int i1 = 0; i < F; i1++) {
+                for (int i2 = 0; i < I; i2++) {
+                    cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), cplex.sum(h[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
+                }
+            }
+        }
+        for (int i = 0; i < M; i++) {
+            for (int i1 = 0; i < F; i1++) {
+                for (int i2 = 0; i < I; i2++) {
+                    cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), cplex.sum(l[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
+                }
+            }
         }
     }
 }
