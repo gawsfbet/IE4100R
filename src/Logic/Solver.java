@@ -8,6 +8,7 @@ package Logic;
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearIntExpr;
+import ilog.concert.IloLinearNumExpr;
 import ilog.cplex.IloCplex;
 
 /**
@@ -193,8 +194,9 @@ public class Solver {
             
             cplex.addLe(demandPerLocker, C);
         }
-        IloLinearIntExpr demandPerPop = cplex.linearIntExpr();
+        IloLinearIntExpr demandPerPop;
         for (int i = 0; i < I; i++) {
+            demandPerPop = cplex.linearIntExpr();
             for (int i1 = 0; i1 < R; i1++) {
                 demandPerPop.addTerm(1, j[i1][i]);
             }
@@ -219,6 +221,34 @@ public class Solver {
                     cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), cplex.sum(l[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
             }
+        }
+        for (int i = 0; i < R; i++) {
+            for (int i1 = 0; i1 < I; i1++) {
+                for (int i2 = 0; i2 < I; i2++) {
+                    if (i1 == i2) continue;
+                    cplex.addLe(cplex.prod(h[i][i2], n[i][i2]), cplex.sum(h[i][i1], cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i1])))));
+                }
+            }
+        }
+        for (int i = 0; i < M; i++) {
+            for (int i1 = 0; i1 < I; i1++) {
+                for (int i2 = 0; i2 < I; i2++) {
+                    if (i1 == i2) continue;
+                    cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), cplex.sum(l[i][i1], cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i1])))));
+                }
+            }
+        }
+        IloLinearNumExpr popTotalDemand;
+        
+        for (int i = 0; i < I; i++) {
+            popTotalDemand = cplex.linearNumExpr();
+            for (int i1 = 0; i1 < R; i1++) {
+                popTotalDemand.addTerm(1, j[i1][i]);
+            }
+            for (int i2 = 0; i2 < M; i2++) {
+                popTotalDemand.addTerm(1, k[i2][i]);
+            }
+            cplex.addGe(z[i], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, popTotalDemand))));
         }
     }
 }
