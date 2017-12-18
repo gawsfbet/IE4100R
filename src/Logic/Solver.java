@@ -18,7 +18,7 @@ import ilog.cplex.IloCplex;
 public class Solver {
     private IloCplex cplex;
     
-    private int T = 2000000000; //large integer (2 billion)
+    private static final int T = 2000000000; //large integer (2 billion)
     
     private int R; //total number of residential demand nodes
     private int M; //total number of MRT demand nodes
@@ -29,14 +29,33 @@ public class Solver {
     
     private int p; //Number of new lockers to place
     
-    private int[] a;
-    private int[] b;
-    private double alpha;
-    private double beta;
-    private int[][] d;
-    private int[][] e;
-    private int[][] h;
-    private int[][] l;
+    private int[] a; //Demand volume at residential nodes
+    private int[] b; //Demand volume at MRT nodes
+    private double alpha; //Proportion of residents that use E-commerce
+    private double beta; //Proportion of MRT riders that use E-commerce
+    private int[][] d; //Distance from resident demand node r to shopping mall f
+    private int[][] e; //Distance from MRT demand mode m to shopping mall f
+    private int[][] h; //Distance from resident demand node r to POPStation i
+    private int[][] l; //Distance from MRT demand mode m to POPStation i
+    
+    public Solver(int[] a, int[] b, double alpha, double beta, int[][] d, int[][] e, int[][] h, int[][] l, int S, int C) {
+        this.a = a;
+        this.b = b;
+        this.alpha = alpha;
+        this.beta = beta;
+        this.d = d;
+        this.e = e;
+        this.h = h;
+        this.l = l;
+        
+        this.R = a.length;
+        this.M = b.length;
+        this.F = d[0].length;
+        this.I = e[0].length;
+        
+        this.S = S;
+        this.C = C;
+    }
     
     public Solver(int R, int M, int F, int I, int S, int C, int p, double alpha, double beta) throws IloException {
         this.cplex = new IloCplex();
@@ -122,8 +141,8 @@ public class Solver {
         }
         //define objective
         cplex.addMaximize(demandObjective);
-        cplex.addMinimize(distanceObjective);
-        cplex.addMinimize(lockerObjective);
+        //cplex.addMinimize(distanceObjective);
+        //cplex.addMinimize(lockerObjective);
         
         //constraints
         //Demand constraints
@@ -239,7 +258,6 @@ public class Solver {
             }
         }
         IloLinearNumExpr popTotalDemand;
-        
         for (int i = 0; i < I; i++) {
             popTotalDemand = cplex.linearNumExpr();
             for (int i1 = 0; i1 < R; i1++) {
