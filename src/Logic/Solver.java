@@ -38,7 +38,9 @@ public class Solver {
     private int[][] h; //Distance from resident demand node r to POPStation i
     private int[][] l; //Distance from MRT demand mode m to POPStation i
     
-    public Solver(int[] a, int[] b, double alpha, double beta, int[][] d, int[][] e, int[][] h, int[][] l, int S, int C) {
+    public Solver(int[] a, int[] b, double alpha, double beta, int[][] d, int[][] e, int[][] h, int[][] l, int p, int C, int S) throws IloException {
+        this.cplex = new IloCplex();
+        
         this.a = a;
         this.b = b;
         this.alpha = alpha;
@@ -51,10 +53,11 @@ public class Solver {
         this.R = a.length;
         this.M = b.length;
         this.F = d[0].length;
-        this.I = e[0].length;
+        this.I = h[0].length;
         
-        this.S = S;
+        this.p = p;
         this.C = C;
+        this.S = S;
     }
     
     public Solver(int R, int M, int F, int I, int S, int C, int p, double alpha, double beta) throws IloException {
@@ -167,36 +170,37 @@ public class Solver {
         
         //Flow constraints
         for (int i = 0; i < R; i++) {
-            for (int i1 = 0; i1 < F; i++) {
+            //System.out.println(i);
+            for (int i1 = 0; i1 < F; i1++) {
                 cplex.addLe(c[i][i1], cplex.prod(T, w[i][i1]));
             }
-            for (int i2 = 0; i2 < I; i++) {
+            for (int i2 = 0; i2 < I; i2++) {
                 cplex.addLe(j[i][i2], cplex.prod(T, n[i][i2]));
             }
         }
         for (int i = 0; i < M; i++) {
-            for (int i1 = 0; i1 < F; i++) {
+            for (int i1 = 0; i1 < F; i1++) {
                 cplex.addLe(g[i][i1], cplex.prod(T, x[i][i1]));
             }
-            for (int i2 = 0; i2 < I; i++) {
+            for (int i2 = 0; i2 < I; i2++) {
                 cplex.addLe(k[i][i2], cplex.prod(T, o[i][i2]));
             }
         }
         
         //Demand constraints
         for (int i = 0; i < R; i++) {
-            for (int i1 = 0; i1 < F; i++) {
+            for (int i1 = 0; i1 < F; i1++) {
                 cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), S);
             }
-            for (int i2 = 0; i2 < I; i++) {
+            for (int i2 = 0; i2 < I; i2++) {
                 cplex.addLe(cplex.prod(h[i][i2], n[i][i2]), S);
             }
         }
         for (int i = 0; i < M; i++) {
-            for (int i1 = 0; i1 < F; i++) {
+            for (int i1 = 0; i1 < F; i1++) {
                 cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), S);
             }
-            for (int i2 = 0; i2 < I; i++) {
+            for (int i2 = 0; i2 < I; i2++) {
                 cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), S);
             }
         }
@@ -228,15 +232,15 @@ public class Solver {
         
         //Competition constraints
         for (int i = 0; i < R; i++) {
-            for (int i1 = 0; i < F; i1++) {
-                for (int i2 = 0; i < I; i2++) {
+            for (int i1 = 0; i1 < F; i1++) {
+                for (int i2 = 0; i2 < I; i2++) {
                     cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), cplex.sum(h[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
             }
         }
         for (int i = 0; i < M; i++) {
-            for (int i1 = 0; i < F; i1++) {
-                for (int i2 = 0; i < I; i2++) {
+            for (int i1 = 0; i1 < F; i1++) {
+                for (int i2 = 0; i2 < I; i2++) {
                     cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), cplex.sum(l[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
             }
@@ -267,6 +271,16 @@ public class Solver {
                 popTotalDemand.addTerm(1, k[i2][i]);
             }
             cplex.addGe(z[i], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, popTotalDemand))));
+        }
+        
+        //solve
+        if (cplex.solve()) {
+            System.out.println("Obj = " + cplex.getObjValue());
+            System.out.println("Obj = " + cplex.getValue(demandObjective));
+            //System.out.println("x   = " + cplex.getValue(x));
+            //System.out.println("y   = " + cplex.getValue(y));
+        } else {
+            System.out.println("Solution not found.");
         }
     }
 }

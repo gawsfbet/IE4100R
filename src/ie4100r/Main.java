@@ -5,12 +5,16 @@
  */
 package ie4100r;
 
+import Logic.Solver;
+import ilog.concert.IloException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -21,16 +25,17 @@ public class Main {
 
     public static void main(String[] args) {
         int[] a = readCsvFile1Dim("data/a.csv");
+        int[] b = readCsvFile1Dim("data/b.csv");
+        int[][] d = readCsvFile2Dim("data/d.csv");
+        int[][] e = readCsvFile2Dim("data/e.csv");
+        int[][] h = readCsvFile2Dim("data/h.csv");
         int[][] l = readCsvFile2Dim("data/l.csv");
-        for (int v : a) {
-            System.out.print(v + " ");
-        }
-        System.out.println("\n\n");
-        for (int i = 0; i < l.length; i++) {
-            for (int j = 0; j < l[i].length; j++) {
-                System.out.print(String.format("%1$-7s", l[i][j]));
-            }
-            System.out.println();
+        
+        try {
+            Solver solver = new Solver(a, b, 0.5, 0.5, d, e, h, l, 20, 540, 1250);
+            solver.facilityLocation();
+        } catch (IloException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
