@@ -32,7 +32,7 @@ public class Main {
         int[][] l = readCsvFile2Dim("data/l.csv");
         
         try {
-            Solver solver = new Solver(a, b, 0.5, 0.5, d, e, h, l, 20, 540, 1250);
+            Solver solver = new Solver(a, b, 0.0317725, 0.01588, d, e, h, l, 20, 540, 1250);
             solver.facilityLocation();
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
