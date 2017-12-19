@@ -84,7 +84,19 @@ public class Solver {
     }
     
     public void facilityLocation() throws IloException {
+        System.out.println("LP problem formulated with:");
+        System.out.println(String.format("%d residential nodes", R));
+        System.out.println(String.format("%d MRT nodes", M));
+        System.out.println(String.format("%d potential locations", F));
+        System.out.println(String.format("%d existing POPStations", I));
+        System.out.println();
+        System.out.println(String.format("Number of new lockers: %d", p));
+        System.out.println(String.format("Maximum allowable distance: %d metres", S));
+        System.out.println(String.format("Locker capacity: %d", C));
+        System.out.println();
+        
         //variables
+        System.out.println("Creating decision variables...");
         IloIntVar[][] c = new IloIntVar[R][F]; //demand from residential r to shopping mall f
         IloIntVar[][] g = new IloIntVar[M][F]; //demand from MRT m to shopping mall f
         IloIntVar[][] j = new IloIntVar[R][I]; //demand from residential r to POPStation i
@@ -119,6 +131,7 @@ public class Solver {
         IloIntVar[] z = cplex.boolVarArray(I);
         
         //expressions
+        System.out.println("Defining objectives...");
         IloLinearIntExpr demandObjective = cplex.linearIntExpr();
         for (int i = 0; i < F; i++) {
             for (int i1 = 0; i1 < R; i1++) {
@@ -149,6 +162,7 @@ public class Solver {
         
         //constraints
         //Demand constraints
+        System.out.println("Adding demand constraints...");
         for (int i = 0; i < R; i++) {
             cplex.addGe(alpha * a[i], cplex.sum(cplex.sum(c[i]), cplex.sum(j[i])));
         }
@@ -157,6 +171,7 @@ public class Solver {
         }
         
         //Binary constraints
+        System.out.println("Adding binary constraints...");
         for (int i = 0; i < R; i++) {
             for (int i1 = 0; i1 < F; i1++) {
                 cplex.addLe(w[i][i1], y[i1]);
@@ -169,6 +184,7 @@ public class Solver {
         }
         
         //Flow constraints
+        System.out.println("Adding flow constraints...");
         for (int i = 0; i < R; i++) {
             //System.out.println(i);
             for (int i1 = 0; i1 < F; i1++) {
@@ -187,7 +203,8 @@ public class Solver {
             }
         }
         
-        //Demand constraints
+        //Distance constraints
+        System.out.println("Adding distance constraints...");
         for (int i = 0; i < R; i++) {
             for (int i1 = 0; i1 < F; i1++) {
                 cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), S);
@@ -206,31 +223,35 @@ public class Solver {
         }
         
         //Capacity constraints
-        IloLinearIntExpr demandPerLocker = cplex.linearIntExpr();
+        System.out.println("Adding capacity constraints...");
+        IloLinearIntExpr[] demandPerLocker = new IloLinearIntExpr[F];
         for (int i = 0; i < F; i++) {
+            demandPerLocker[i] = cplex.linearIntExpr();
+            
             for (int i1 = 0; i1 < R; i1++) {
-                demandPerLocker.addTerm(1, c[i1][i]);
+                demandPerLocker[i].addTerm(1, c[i1][i]);
             }
             for (int i2 = 0; i2 < M; i2++) {
-                demandPerLocker.addTerm(1, g[i2][i]);
+                demandPerLocker[i].addTerm(1, g[i2][i]);
             }
             
-            cplex.addLe(demandPerLocker, C);
+            cplex.addLe(demandPerLocker[i], C);
         }
-        IloLinearIntExpr demandPerPop;
+        IloLinearIntExpr[] demandPerPop = new IloLinearIntExpr[I];
         for (int i = 0; i < I; i++) {
-            demandPerPop = cplex.linearIntExpr();
+            demandPerPop[i] = cplex.linearIntExpr();
             for (int i1 = 0; i1 < R; i1++) {
-                demandPerPop.addTerm(1, j[i1][i]);
+                demandPerPop[i].addTerm(1, j[i1][i]);
             }
             for (int i2 = 0; i2 < M; i2++) {
-                demandPerPop.addTerm(1, k[i2][i]);
+                demandPerPop[i].addTerm(1, k[i2][i]);
             }
             
-            cplex.addLe(demandPerPop, C);
+            cplex.addLe(demandPerPop[i], C);
         }
         
         //Competition constraints
+        System.out.println("Adding competition constraints...");
         for (int i = 0; i < R; i++) {
             for (int i1 = 0; i1 < F; i1++) {
                 for (int i2 = 0; i2 < I; i2++) {
@@ -261,19 +282,14 @@ public class Solver {
                 }
             }
         }
-        IloLinearNumExpr popTotalDemand;
+        //IloLinearNumExpr[] popTotalDemand = new IloLinearNumExpr[I];
         for (int i = 0; i < I; i++) {
-            popTotalDemand = cplex.linearNumExpr();
-            for (int i1 = 0; i1 < R; i1++) {
-                popTotalDemand.addTerm(1, j[i1][i]);
-            }
-            for (int i2 = 0; i2 < M; i2++) {
-                popTotalDemand.addTerm(1, k[i2][i]);
-            }
-            cplex.addGe(z[i], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, popTotalDemand))));
+            cplex.addGe(z[i], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, demandPerPop[i]))));
+            //cplex.addGe(z[i], cplex.prod(1.0 / C, cplex.sum(C, cplex.prod(-1, demandPerPop[i]))));
         }
         
         //solve
+        System.out.println("Solving...");
         if (cplex.solve()) {
             System.out.println("Obj = " + cplex.getObjValue());
             System.out.println("Obj = " + cplex.getValue(demandObjective));
