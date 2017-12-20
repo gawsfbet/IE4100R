@@ -256,44 +256,31 @@ public class Solver {
 
         //Competition constraints
         System.out.println("Adding competition constraints...");
-        for (int i = 0; i < R; i++) {
-            for (int i1 = 0; i1 < F; i1++) {
-                for (int i2 = 0; i2 < I; i2++) {
+        for (int i1 = 0; i1 < F; i1++) {
+            for (int i2 = 0; i2 < I; i2++) {
+                for (int i = 0; i < R; i++) {
                     cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), cplex.sum(h[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
-            }
-        }
-        for (int i = 0; i < M; i++) {
-            for (int i1 = 0; i1 < F; i1++) {
-                for (int i2 = 0; i2 < I; i2++) {
+                
+                for (int i = 0; i < M; i++) {
                     cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), cplex.sum(l[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
             }
         }
-        for (int i = 0; i < R; i++) {
-            for (int i1 = 0; i1 < I; i1++) {
-                for (int i2 = 0; i2 < I; i2++) {
-                    if (i1 == i2) {
-                        continue;
-                    }
+        for (int i1 = 0; i1 < I; i1++) {
+            cplex.addGe(z[i1], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, demandPerPop[i1]))));
+            //cplex.addGe(z[i], cplex.prod(1.0 / C, cplex.sum(C, cplex.prod(-1, demandPerPop[i]))));
+            for (int i2 = 0; i2 < I; i2++) {
+                if (i1 == i2) {
+                    continue;
+                }
+                for (int i = 0; i < R; i++) {
                     cplex.addLe(cplex.prod(h[i][i2], n[i][i2]), cplex.sum(h[i][i1], cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i1])))));
                 }
-            }
-        }
-        for (int i = 0; i < M; i++) {
-            for (int i1 = 0; i1 < I; i1++) {
-                for (int i2 = 0; i2 < I; i2++) {
-                    if (i1 == i2) {
-                        continue;
-                    }
+                for (int i = 0; i < M; i++) {
                     cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), cplex.sum(l[i][i1], cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i1])))));
                 }
             }
-        }
-        //IloLinearNumExpr[] popTotalDemand = new IloLinearNumExpr[I];
-        for (int i = 0; i < I; i++) {
-            cplex.addGe(z[i], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, demandPerPop[i]))));
-            //cplex.addGe(z[i], cplex.prod(1.0 / C, cplex.sum(C, cplex.prod(-1, demandPerPop[i]))));
         }
         cplex.addLe(cplex.sum(y), p);
 
