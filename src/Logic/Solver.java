@@ -5,11 +5,13 @@
  */
 package Logic;
 
+import java.io.FileWriter;
 import ilog.concert.IloException;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearIntExpr;
 import ilog.concert.IloLinearNumExpr;
 import ilog.cplex.IloCplex;
+import java.io.IOException;
 
 /**
  *
@@ -287,16 +289,39 @@ public class Solver {
             cplex.addGe(z[i], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, demandPerPop[i]))));
             //cplex.addGe(z[i], cplex.prod(1.0 / C, cplex.sum(C, cplex.prod(-1, demandPerPop[i]))));
         }
+        cplex.addLe(cplex.sum(y), p);
         
         //solve
         System.out.println("Solving...");
         if (cplex.solve()) {
             System.out.println("Obj = " + cplex.getObjValue());
-            System.out.println("Obj = " + cplex.getValue(demandObjective));
+            //System.out.println("Obj = " + cplex.getValue(demandObjective));
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
+            
+            writeToCsv2Dim(c, "c");
         } else {
             System.out.println("Solution not found.");
+        }
+    }
+    
+    public void writeToCsv2Dim(IloIntVar[][] output, String fileName) throws IloException {
+        try {
+            FileWriter writer = new FileWriter(String.format("C:\\Users\\Kevin-Notebook\\Documents\\NetBeansProjects\\IE4100R\\output\\%s.csv", fileName));
+
+            for (int i1 = 0; i1 < output.length; i1++) {
+                for (int i2 = 0; i2 < output[i1].length; i2++) {
+                    writer.append(Double.toString(cplex.getValue(output[i1][i2])));
+                    writer.append(',');
+                }
+                writer.append('\n');
+            }
+
+            //generate whatever data you want
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
