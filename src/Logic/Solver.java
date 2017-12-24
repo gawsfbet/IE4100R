@@ -287,14 +287,44 @@ public class Solver {
         //solve
         System.out.println("Solving...");
         if (cplex.solve()) {
-            System.out.println("Obj = " + cplex.getObjValue());
-            //System.out.println("Obj = " + cplex.getValue(demandObjective));
+            //System.out.println("Obj = " + cplex.getObjValue());
+            System.out.println("Demand Obj = " + cplex.getValue(demandObjective));
+            System.out.println("Distance Obj = " + cplex.getValue(distanceObjective));
+            System.out.println("Locker Obj = " + cplex.getValue(lockerObjective));
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
 
             writeToCsv2Dim(c, "c");
+            writeToCsv2Dim(g, "g");
+            
+            writeToCsv2Dim(w, "w");
+            writeToCsv2Dim(x, "x");
+            
+            writeToCsv1Dim(y, "y");
         } else {
             System.out.println("Solution not found.");
+        }
+    }
+    
+    public void writeToCsv1Dim(IloIntVar[] output, String fileName) throws IloException {
+        try {
+            File dir = new File("output");
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            
+            FileWriter writer = new FileWriter(String.format("output\\%s.csv", fileName));
+            
+            for (int i = 0; i < output.length; i++) {
+                writer.append(Double.toString(cplex.getValue(output[i])));
+                writer.append(',');
+            }
+
+            //generate whatever data you want
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

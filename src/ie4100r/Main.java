@@ -31,8 +31,12 @@ public class Main {
         int[][] h = readCsvFile2Dim("data/h.csv");
         int[][] l = readCsvFile2Dim("data/l.csv");
         
+        int p = 100; //number of new lockers
+        int C = 540; //locker capacity
+        int S = 1250; //distance permitted
+        
         try {
-            Solver solver = new Solver(a, b, 0.0317725, 0.01588, d, e, h, l, 20, 540, 1250);
+            Solver solver = new Solver(a, b, 0.0317725, 0.01588, d, e, h, l, p, C, S);
             solver.facilityLocation();
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
