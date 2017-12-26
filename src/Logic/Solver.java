@@ -7,12 +7,15 @@ package Logic;
 
 import java.io.FileWriter;
 import ilog.concert.IloException;
+import ilog.concert.IloIntExpr;
 import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearIntExpr;
 import ilog.concert.IloLinearNumExpr;
+import ilog.concert.IloNumExpr;
 import ilog.cplex.IloCplex;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 /**
  *
@@ -87,7 +90,7 @@ public class Solver {
         this.l = new int[M][I];
     }
 
-    public void facilityLocation() throws IloException {
+    public void facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff) throws IloException {
         System.out.println("LP problem formulated with:");
         System.out.println(String.format("%d residential nodes", R));
         System.out.println(String.format("%d MRT nodes", M));
@@ -159,8 +162,12 @@ public class Solver {
         for (int i = 0; i < F; i++) {
             lockerObjective.addTerm(1, y[i]);
         }
+        IloNumExpr combinedObjective = cplex.sum(
+                cplex.prod(demandCoeff, demandObjective), //maximize
+                cplex.prod(distanceCoeff, distanceObjective), //minimize
+                cplex.prod(lockerCoeff, lockerObjective)); //minimize
         //define objective
-        cplex.addMaximize(demandObjective);
+        cplex.addMaximize(combinedObjective);
         //cplex.addMinimize(distanceObjective);
         //cplex.addMinimize(lockerObjective);
 
@@ -282,12 +289,12 @@ public class Solver {
                 }
             }
         }
-        cplex.addLe(cplex.sum(y), p);
+        //cplex.addLe(cplex.sum(y), p);
 
         //solve
         System.out.println("Solving...");
         if (cplex.solve()) {
-            //System.out.println("Obj = " + cplex.getObjValue());
+            System.out.println("Total Weighted Obj = " + cplex.getObjValue());
             System.out.println("Demand Obj = " + cplex.getValue(demandObjective));
             System.out.println("Distance Obj = " + cplex.getValue(distanceObjective));
             System.out.println("Locker Obj = " + cplex.getValue(lockerObjective));
@@ -306,12 +313,34 @@ public class Solver {
         }
     }
     
+    public void makeOutputFolder() {
+        File dir = new File("output");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+    }
+    
+    public void writeObjectives(HashMap objectives) {
+        try {
+            makeOutputFolder();
+            
+            FileWriter writer = new FileWriter("output\\objectives.txt");
+            
+            writer.append("Coefficients\n");
+            writer.append("Demand Obj = \n");
+            writer.append("Distance Obj = \n");
+            writer.append("Locker Obj = \n");
+            
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            System.err.println("Error writing to file " + e.getCause().toString());
+        }
+    }
+    
     public void writeToCsv1Dim(IloIntVar[] output, String fileName) throws IloException {
         try {
-            File dir = new File("output");
-            if (!dir.exists()) {
-                dir.mkdir();
-            }
+            makeOutputFolder();
             
             FileWriter writer = new FileWriter(String.format("output\\%s.csv", fileName));
             
@@ -324,16 +353,13 @@ public class Solver {
             writer.flush();
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error writing to file " + e.getCause().toString());
         }
     }
 
     public void writeToCsv2Dim(IloIntVar[][] output, String fileName) throws IloException {
         try {
-            File dir = new File("output");
-            if (!dir.exists()) {
-                dir.mkdir();
-            }
+            makeOutputFolder();
             
             FileWriter writer = new FileWriter(String.format("output\\%s.csv", fileName));
 
@@ -349,7 +375,7 @@ public class Solver {
             writer.flush();
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error writing to file " + e.getCause().toString());
         }
     }
 }
