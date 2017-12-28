@@ -300,6 +300,9 @@ public class Solver {
             System.out.println("Locker Obj = " + cplex.getValue(lockerObjective));
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
+            
+            writeObjectives(demandCoeff, distanceCoeff, lockerCoeff, 
+                    cplex.getObjValue(), cplex.getValue(demandObjective), cplex.getValue(distanceObjective), cplex.getValue(lockerObjective));
 
             writeToCsv2Dim(c, "c");
             writeToCsv2Dim(g, "g");
@@ -320,16 +323,24 @@ public class Solver {
         }
     }
     
-    public void writeObjectives(HashMap objectives) {
+    public void writeObjectives(double demandCoeff, double distanceCoeff, double lockerCoeff,
+            double totalObj, double demandObj, double distanceObj, double lockerObj) {
         try {
             makeOutputFolder();
             
             FileWriter writer = new FileWriter("output\\objectives.txt");
             
-            writer.append("Coefficients\n");
-            writer.append("Demand Obj = \n");
-            writer.append("Distance Obj = \n");
-            writer.append("Locker Obj = \n");
+            writer.append("Coefficients\r\n");
+            writer.append(String.format("Demand Obj = %.1f\r\n", demandCoeff));
+            writer.append(String.format("Distance Obj = %.1f\r\n", distanceCoeff));
+            writer.append(String.format("Locker Obj = %.1f\r\n", lockerCoeff));
+            writer.append("\r\n");
+            
+            writer.append("Results\r\n");
+            writer.append(String.format("Total Weighted Obj = %f\r\n", totalObj));
+            writer.append(String.format("Demand Obj = %f\r\n", demandObj));
+            writer.append(String.format("Distance Obj = %f\r\n", distanceObj));
+            writer.append(String.format("Locker Obj = %f\r\n", lockerObj));
             
             writer.flush();
             writer.close();
