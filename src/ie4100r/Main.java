@@ -37,7 +37,7 @@ public class Main {
         
         try {
             Solver solver = new Solver(a, b, 0.0317725, 0.01588, d, e, h, l, p, C, S);
-            solver.facilityLocation(1.0, -0.3, 0.0);
+            solver.facilityLocation(1.0, -0.2, -200, 8);
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

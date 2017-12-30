@@ -1,0 +1,15 @@
+Coefficients
+Demand Obj = 1.00
+Distance Obj = -0.10
+Locker Obj = -1.00
+
+Adjusted coefficients
+Demand Obj = 0.476190
+Distance Obj = 0.047619
+Locker Obj = 0.476190
+
+Results
+Total Weighted Obj = 35355
+Demand Obj = 40865
+Distance Obj = 54215
+Locker Obj = 89

@@ -12,6 +12,7 @@ import ilog.concert.IloIntVar;
 import ilog.concert.IloLinearIntExpr;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumExpr;
+import ilog.concert.IloObjective;
 import ilog.cplex.IloCplex;
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +91,11 @@ public class Solver {
         this.l = new int[M][I];
     }
 
-    public void facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff) throws IloException {
+    public void facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff, int folderName) throws IloException {
+        assert demandCoeff >= 0;
+        assert distanceCoeff <= 0;
+        assert lockerCoeff <= 0;
+        
         System.out.println("LP problem formulated with:");
         System.out.println(String.format("%d residential nodes", R));
         System.out.println(String.format("%d MRT nodes", M));
@@ -167,7 +172,7 @@ public class Solver {
                 cplex.prod(distanceCoeff, distanceObjective), //minimize
                 cplex.prod(lockerCoeff, lockerObjective)); //minimize
         //define objective
-        cplex.addMaximize(combinedObjective);
+        IloObjective objective = cplex.addMaximize(combinedObjective);
         //cplex.addMinimize(distanceObjective);
         //cplex.addMinimize(lockerObjective);
 
@@ -302,15 +307,15 @@ public class Solver {
             //System.out.println("y   = " + cplex.getValue(y));
             
             writeObjectives(demandCoeff, distanceCoeff, lockerCoeff, 
-                    cplex.getObjValue(), cplex.getValue(demandObjective), cplex.getValue(distanceObjective), cplex.getValue(lockerObjective));
+                    cplex.getObjValue(), cplex.getValue(demandObjective), cplex.getValue(distanceObjective), cplex.getValue(lockerObjective), folderName);
 
-            writeToCsv2Dim(c, "c");
-            writeToCsv2Dim(g, "g");
+            writeToCsv2Dim(c, "c", folderName);
+            writeToCsv2Dim(g, "g", folderName);
             
-            writeToCsv2Dim(w, "w");
-            writeToCsv2Dim(x, "x");
+            writeToCsv2Dim(w, "w", folderName);
+            writeToCsv2Dim(x, "x", folderName);
             
-            writeToCsv1Dim(y, "y");
+            writeToCsv1Dim(y, "y", folderName);
         } else {
             System.out.println("Solution not found.");
         }
@@ -323,24 +328,38 @@ public class Solver {
         }
     }
     
+    public void makeOutputFolder(int folderName) {
+        File dir = new File(String.format("output\\%d", folderName));
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+    }
+    
     public void writeObjectives(double demandCoeff, double distanceCoeff, double lockerCoeff,
-            double totalObj, double demandObj, double distanceObj, double lockerObj) {
+            double totalObj, double demandObj, double distanceObj, double lockerObj, int folderName) {
         try {
             makeOutputFolder();
+            makeOutputFolder(folderName);
             
-            FileWriter writer = new FileWriter("output\\objectives.txt");
+            FileWriter writer = new FileWriter(String.format("output\\%d\\objectives.txt", folderName));
             
             writer.append("Coefficients\r\n");
-            writer.append(String.format("Demand Obj = %.1f\r\n", demandCoeff));
-            writer.append(String.format("Distance Obj = %.1f\r\n", distanceCoeff));
-            writer.append(String.format("Locker Obj = %.1f\r\n", lockerCoeff));
+            writer.append(String.format("Demand Obj = %.2f\r\n", demandCoeff));
+            writer.append(String.format("Distance Obj = %.2f\r\n", distanceCoeff));
+            writer.append(String.format("Locker Obj = %.2f\r\n", lockerCoeff));
+            writer.append("\r\n");
+            
+            writer.append("Adjusted coefficients\r\n");
+            writer.append(String.format("Demand Obj = %f\r\n", demandCoeff / (demandCoeff - distanceCoeff - lockerCoeff)));
+            writer.append(String.format("Distance Obj = %f\r\n", -distanceCoeff / (demandCoeff - distanceCoeff - lockerCoeff)));
+            writer.append(String.format("Locker Obj = %f\r\n", -lockerCoeff / (demandCoeff - distanceCoeff - lockerCoeff)));
             writer.append("\r\n");
             
             writer.append("Results\r\n");
-            writer.append(String.format("Total Weighted Obj = %f\r\n", totalObj));
-            writer.append(String.format("Demand Obj = %f\r\n", demandObj));
-            writer.append(String.format("Distance Obj = %f\r\n", distanceObj));
-            writer.append(String.format("Locker Obj = %f\r\n", lockerObj));
+            writer.append(String.format("Total Weighted Obj = %d\r\n", Math.round(totalObj)));
+            writer.append(String.format("Demand Obj = %d\r\n", Math.round(demandObj)));
+            writer.append(String.format("Distance Obj = %d\r\n", Math.round(distanceObj)));
+            writer.append(String.format("Locker Obj = %d\r\n", Math.round(lockerObj)));
             
             writer.flush();
             writer.close();
@@ -349,11 +368,12 @@ public class Solver {
         }
     }
     
-    public void writeToCsv1Dim(IloIntVar[] output, String fileName) throws IloException {
+    public void writeToCsv1Dim(IloIntVar[] output, String fileName, int folderName) throws IloException {
         try {
             makeOutputFolder();
+            makeOutputFolder(folderName);
             
-            FileWriter writer = new FileWriter(String.format("output\\%s.csv", fileName));
+            FileWriter writer = new FileWriter(String.format("output\\%d\\%s.csv", folderName, fileName));
             
             for (int i = 0; i < output.length; i++) {
                 writer.append(Double.toString(cplex.getValue(output[i])));
@@ -368,11 +388,12 @@ public class Solver {
         }
     }
 
-    public void writeToCsv2Dim(IloIntVar[][] output, String fileName) throws IloException {
+    public void writeToCsv2Dim(IloIntVar[][] output, String fileName, int folderName) throws IloException {
         try {
             makeOutputFolder();
+            makeOutputFolder(folderName);
             
-            FileWriter writer = new FileWriter(String.format("output\\%s.csv", fileName));
+            FileWriter writer = new FileWriter(String.format("output\\%d\\%s.csv", folderName, fileName));
 
             for (int i1 = 0; i1 < output.length; i1++) {
                 for (int i2 = 0; i2 < output[i1].length; i2++) {
