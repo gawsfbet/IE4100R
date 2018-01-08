@@ -5,6 +5,7 @@
  */
 package ie4100r;
 
+import FileManager.CsvReader;
 import Logic.Solver;
 import ilog.concert.IloException;
 import java.io.BufferedReader;
@@ -24,12 +25,12 @@ import java.util.logging.Logger;
 public class Main {
 
     public static void main(String[] args) {
-        int[] a = readCsvFile1Dim("data/a.csv");
-        int[] b = readCsvFile1Dim("data/b.csv");
-        int[][] d = readCsvFile2Dim("data/d.csv");
-        int[][] e = readCsvFile2Dim("data/e.csv");
-        int[][] h = readCsvFile2Dim("data/h.csv");
-        int[][] l = readCsvFile2Dim("data/l.csv");
+        int[] a = CsvReader.readCsvFile1Dim("data/a.csv");
+        int[] b = CsvReader.readCsvFile1Dim("data/b.csv");
+        int[][] d = CsvReader.readCsvFile2Dim("data/d.csv");
+        int[][] e = CsvReader.readCsvFile2Dim("data/e.csv");
+        int[][] h = CsvReader.readCsvFile2Dim("data/h.csv");
+        int[][] l = CsvReader.readCsvFile2Dim("data/l.csv");
         
         int p = 100; //number of new lockers
         int C = 540; //locker capacity
@@ -40,42 +41,6 @@ public class Main {
             solver.facilityLocation(1.0, -0.2, -200, 8);
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private static int[] readCsvFile1Dim(String fileName) {
-        String line = "";
-        ArrayList<Integer> values = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
-            while ((line = br.readLine()) != null) {
-                // csv is a row
-                values.add(Integer.parseInt(line));
-            }
-            
-            return values.stream().mapToInt(v -> v).toArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private static int[][] readCsvFile2Dim(String fileName) {
-        String line = "";
-        String cvsSplitBy = ",";
-        ArrayList<int[]> values = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
-            while ((line = br.readLine()) != null) {
-                // use comma as separator
-                int[] entries = Arrays.stream(line.split(cvsSplitBy)).mapToInt(Integer::parseInt).toArray();
-                values.add(entries);
-            }
-            
-            return values.stream().map(v -> v).toArray(int[][]::new);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
         }
     }
 }
