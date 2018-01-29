@@ -22,7 +22,7 @@ import java.util.HashMap;
  *
  * @author Kevin-Notebook
  */
-public class Solver {
+public class MIPSolver {
 
     private IloCplex cplex;
 
@@ -46,7 +46,7 @@ public class Solver {
     private int[][] h; //Distance from resident demand node r to POPStation i
     private int[][] l; //Distance from MRT demand mode m to POPStation i
 
-    public Solver(int[] a, int[] b, double alpha, double beta, int[][] d, int[][] e, int[][] h, int[][] l, int p, int C, int S) throws IloException {
+    public MIPSolver(int[] a, int[] b, double alpha, double beta, int[][] d, int[][] e, int[][] h, int[][] l, int p, int C, int S) throws IloException {
         this.cplex = new IloCplex();
 
         this.a = a;
@@ -68,7 +68,7 @@ public class Solver {
         this.S = S;
     }
 
-    public Solver(int R, int M, int F, int I, int S, int C, int p, double alpha, double beta) throws IloException {
+    public MIPSolver(int R, int M, int F, int I, int S, int C, int p, double alpha, double beta) throws IloException {
         this.cplex = new IloCplex();
 
         this.R = R;
@@ -91,7 +91,7 @@ public class Solver {
         this.l = new int[M][I];
     }
 
-    public void facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff, int folderName) throws IloException {
+    public HashMap facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff, int folderName) throws IloException {
         assert demandCoeff >= 0;
         assert distanceCoeff <= 0;
         assert lockerCoeff <= 0;
@@ -157,10 +157,10 @@ public class Solver {
 
         IloLinearIntExpr distanceObjective = cplex.linearIntExpr();
         for (int i = 0; i < R; i++) {
-            distanceObjective.addTerms(d[i], w[i]);
+            distanceObjective.addTerms(d[i], c[i]);
         }
         for (int i = 0; i < M; i++) {
-            distanceObjective.addTerms(e[i], x[i]);
+            distanceObjective.addTerms(e[i], g[i]);
         }
 
         IloLinearIntExpr lockerObjective = cplex.linearIntExpr();
@@ -316,8 +316,17 @@ public class Solver {
             writeToCsv2Dim(x, "x", folderName);
             
             writeToCsv1Dim(y, "y", folderName);
+            
+            HashMap<String, Integer> results = new HashMap<>();
+            results.put("total", (int) Math.round(cplex.getObjValue()));
+            results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
+            results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
+            results.put("locker", (int) Math.round(cplex.getValue(lockerObjective)));
+            
+            return results;
         } else {
             System.out.println("Solution not found.");
+            return null;
         }
     }
     
