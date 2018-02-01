@@ -16,6 +16,21 @@ import java.util.Arrays;
  * @author Kevin-Notebook
  */
 public class CsvReader {
+    public static int[] readCsvFileForY(String fileName) {
+        String line = "";
+        String[] values;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            line = br.readLine();
+            values = line.split(",");
+            
+            return Arrays.stream(values).mapToDouble(Double::parseDouble).mapToInt(d -> (int) Math.round(d)).toArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
     public static int[] readCsvFile1Dim(String fileName) {
         String line = "";
         ArrayList<Integer> values = new ArrayList<>();

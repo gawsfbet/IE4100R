@@ -7,6 +7,7 @@ package ie4100r;
 
 import FileManager.CsvReader;
 import Logic.MIPSolver;
+import Logic.OCBASolver;
 import Utils.RNG;
 import ilog.concert.IloException;
 import java.io.BufferedReader;
@@ -48,8 +49,14 @@ public class Main {
             System.out.println(a[i] + " " + newa[i]);
         }*/
         
+        double[] alpha = new double[a.length], beta = new double[b.length];
+        Arrays.fill(alpha, 0.0317725);
+        Arrays.fill(beta, 0.01588);
+        int[] y = CsvReader.readCsvFileForY("data/y.csv");
+        
         try {
-            MIPSolver solver = new MIPSolver(a, b, 0.0317725, 0.01588, d, e, h, l, p, C, S);
+            //MIPSolver solver = new MIPSolver(a, b, 0.0317725, 0.01588, d, e, h, l, p, C, S);
+            OCBASolver solver = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
             solver.facilityLocation(1.0, -0.002, -150, 0);
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
