@@ -9,6 +9,7 @@ import FileManager.CsvReader;
 import Logic.MIPSolver;
 import Logic.OCBASolver;
 import Utils.RNG;
+import ilog.concert.IloConstraint;
 import ilog.concert.IloException;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -35,11 +36,11 @@ public class Main {
         int[][] e = CsvReader.readCsvFile2Dim("data/e.csv");
         int[][] h = CsvReader.readCsvFile2Dim("data/h.csv");
         int[][] l = CsvReader.readCsvFile2Dim("data/l.csv");
-        
+
         int p = 100; //number of new lockers
         int C = 540; //locker capacity
         int S = 1250; //distance permitted
-        
+
         /*RNG rng = new RNG();
         double[] aModifierPercent = rng.generateNormalVars(a.length, 0, 5);
         
@@ -48,16 +49,34 @@ public class Main {
         for (int i = 0; i < newa.length; i++) {
             System.out.println(a[i] + " " + newa[i]);
         }*/
-        
         double[] alpha = new double[a.length], beta = new double[b.length];
         Arrays.fill(alpha, 0.0317725);
         Arrays.fill(beta, 0.01588);
         int[] y = CsvReader.readCsvFileForY("data/y.csv");
-        
+
         try {
-            //MIPSolver solver = new MIPSolver(a, b, 0.0317725, 0.01588, d, e, h, l, p, C, S);
+            double demandCoeff = 1.0, distanceCoeff = -0.002, lockerCoeff = 150;
+
             OCBASolver solver = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
-            solver.facilityLocation(1.0, -0.002, -150, 0);
+            solver.facilityLocation(demandCoeff, distanceCoeff, lockerCoeff, 0);
+            /*solver.createVariables();
+            solver.addDemandConstraints();
+            solver.addDistanceConstraints();
+            solver.addBinaryConstraints();
+            solver.addFlowConstraints();
+            solver.addCompetitionConstraints();*/
+
+            //variables
+            /*solver.createVariables();
+            solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+            IloConstraint[] demandConstraints = solver.addDemandConstraints();
+            IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
+            IloConstraint[] flowConstraints = solver.addFlowConstraints();
+            IloConstraint[] distanceConstraints = solver.addDistanceConstraints();
+            IloConstraint[] capacityConstraints = solver.addCapacityConstraints();
+            solver.addCompetitionConstraints();
+            System.out.println("Solving...");
+            solver.solve();*/
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

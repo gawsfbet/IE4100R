@@ -91,11 +91,6 @@ public class OCBASolver {
         
         cplex.setOut(null);
     }
-    
-    public void changeRandomParameters(double[] alpha, double[] beta) {
-        this.alpha = alpha;
-        this.beta = beta;
-    }
 
     public HashMap facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff, int folderName) throws IloException {
         assert demandCoeff >= 0;
@@ -141,36 +136,7 @@ public class OCBASolver {
 
         //solve
         System.out.println("Solving...");
-        if (cplex.solve()) {
-            System.out.println("Total Weighted Obj = " + cplex.getObjValue());
-            System.out.println("Demand Obj = " + cplex.getValue(demandObjective));
-            System.out.println("Distance Obj = " + cplex.getValue(distanceObjective));
-            System.out.println("Locker Obj (fixed) = " + Arrays.stream(y).sum());
-            //System.out.println("x   = " + cplex.getValue(x));
-            //System.out.println("y   = " + cplex.getValue(y));
-            
-            /*writeObjectives(demandCoeff, distanceCoeff, lockerCoeff, 
-                    cplex.getObjValue(), cplex.getValue(demandObjective), cplex.getValue(distanceObjective), cplex.getValue(lockerObjective), folderName);
-
-            writeToCsv2Dim(c, "c", folderName);
-            writeToCsv2Dim(g, "g", folderName);
-            
-            writeToCsv2Dim(w, "w", folderName);
-            writeToCsv2Dim(x, "x", folderName);
-            
-            writeToCsv1Dim(y, "y", folderName);*/
-            
-            HashMap<String, Integer> results = new HashMap<>();
-            results.put("total", (int) Math.round(cplex.getObjValue()));
-            results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
-            results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
-            results.put("locker", Arrays.stream(y).sum());
-            
-            return results;
-        } else {
-            System.out.println("Solution not found.");
-            return null;
-        }
+        return solve();
     }
     
     public void createVariables() throws IloException {
@@ -387,6 +353,44 @@ public class OCBASolver {
                     cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), cplex.sum(l[i][i1], cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i1])))));
                 }
             }
+        }
+    }
+    
+    public void changeAlphaAndBeta(double[] alpha, double[] beta) {
+        this.alpha = alpha;
+        this.beta = beta;
+    }
+    
+    public HashMap solve() throws IloException {
+        if (cplex.solve()) {
+            System.out.println("Total Weighted Obj = " + cplex.getObjValue());
+            System.out.println("Demand Obj = " + cplex.getValue(demandObjective));
+            System.out.println("Distance Obj = " + cplex.getValue(distanceObjective));
+            System.out.println("Locker Obj (fixed) = " + Arrays.stream(y).sum());
+            //System.out.println("x   = " + cplex.getValue(x));
+            //System.out.println("y   = " + cplex.getValue(y));
+            
+            /*writeObjectives(demandCoeff, distanceCoeff, lockerCoeff, 
+                    cplex.getObjValue(), cplex.getValue(demandObjective), cplex.getValue(distanceObjective), cplex.getValue(lockerObjective), folderName);
+
+            writeToCsv2Dim(c, "c", folderName);
+            writeToCsv2Dim(g, "g", folderName);
+            
+            writeToCsv2Dim(w, "w", folderName);
+            writeToCsv2Dim(x, "x", folderName);
+            
+            writeToCsv1Dim(y, "y", folderName);*/
+            
+            HashMap<String, Integer> results = new HashMap<>();
+            results.put("total", (int) Math.round(cplex.getObjValue()));
+            results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
+            results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
+            results.put("locker", Arrays.stream(y).sum());
+            
+            return results;
+        } else {
+            System.out.println("Solution not found.");
+            return null;
         }
     }
     
