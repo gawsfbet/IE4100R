@@ -47,9 +47,9 @@ public class OCBASolver {
     private int[][] e; //Distance from MRT demand mode m to shopping mall f
     private int[][] h; //Distance from resident demand node r to POPStation i
     private int[][] l; //Distance from MRT demand mode m to POPStation i
-    
+
     private int[] y; //new variable: facilities that were placed
-    
+
     IloIntVar[][] c; //demand from residential r to shopping mall f
     IloIntVar[][] g; //demand from MRT m to shopping mall f
     IloIntVar[][] j; //demand from residential r to POPStation i
@@ -61,7 +61,7 @@ public class OCBASolver {
     IloIntVar[][] o; //if demand can flow from MRT m to POPStation i
 
     IloIntVar[] z; //if POPstation at i is full
-    
+
     IloLinearIntExpr demandObjective;
     IloLinearIntExpr distanceObjective;
     IloLinearIntExpr[] demandPerPop;
@@ -71,8 +71,8 @@ public class OCBASolver {
 
         this.a = a;
         this.b = b;
-        this.alpha = alpha;
-        this.beta = beta;
+        this.alpha = Arrays.copyOf(alpha, alpha.length);
+        this.beta = Arrays.copyOf(beta, beta.length);
         this.d = d;
         this.e = e;
         this.h = h;
@@ -86,9 +86,9 @@ public class OCBASolver {
         this.p = p;
         this.C = C;
         this.S = S;
-        
+
         this.y = y;
-        
+
         cplex.setOut(null);
     }
 
@@ -96,7 +96,7 @@ public class OCBASolver {
         assert demandCoeff >= 0;
         assert distanceCoeff <= 0;
         assert lockerCoeff <= 0;
-        
+
         System.out.println("LP problem formulated with:");
         System.out.println(String.format("%d residential nodes", R));
         System.out.println(String.format("%d MRT nodes", M));
@@ -138,7 +138,7 @@ public class OCBASolver {
         System.out.println("Solving...");
         return solve();
     }
-    
+
     public void createVariables() throws IloException {
         System.out.println("Creating decision variables...");
         c = new IloIntVar[R][F]; //demand from residential r to shopping mall f
@@ -174,8 +174,12 @@ public class OCBASolver {
         //IloIntVar[] y = cplex.boolVarArray(F);
         z = cplex.boolVarArray(I);
     }
-    
+
     public IloObjective defineObjectives(double demandCoeff, double distanceCoeff, double lockerCoeff) throws IloException {
+        assert demandCoeff >= 0;
+        assert distanceCoeff <= 0;
+        assert lockerCoeff <= 0;
+
         demandObjective = cplex.linearIntExpr();
         for (int i = 0; i < F; i++) {
             for (int i1 = 0; i1 < R; i1++) {
@@ -207,26 +211,26 @@ public class OCBASolver {
         //define objective
         return cplex.addMaximize(combinedObjective);
     }
-    
+
     //remove these constraints to change alpha and beta
     public IloConstraint[] addDemandConstraints() throws IloException {
         System.out.println("Adding demand constraints...");
         IloConstraint[] demandConstraints = new IloConstraint[R + M];
-        
+
         for (int i = 0; i < R; i++) {
             demandConstraints[i] = cplex.addGe(alpha[i] * a[i], cplex.sum(cplex.sum(c[i]), cplex.sum(j[i])));
         }
         for (int i = 0; i < M; i++) {
             demandConstraints[R + i] = cplex.addGe(beta[i] * b[i], cplex.sum(cplex.sum(g[i]), cplex.sum(k[i])));
         }
-        
+
         return demandConstraints;
     }
-    
+
     public IloConstraint[] addBinaryConstraints() throws IloException {
         System.out.println("Adding binary constraints...");
         ArrayList<IloConstraint> binaryConstraints = new ArrayList<>();
-        
+
         for (int i = 0; i < R; i++) {
             for (int i1 = 0; i1 < F; i1++) {
                 binaryConstraints.add(cplex.addLe(w[i][i1], y[i1]));
@@ -237,14 +241,14 @@ public class OCBASolver {
                 binaryConstraints.add(cplex.addLe(x[i][i1], y[i1]));
             }
         }
-        
+
         return binaryConstraints.toArray(new IloConstraint[0]);
     }
-    
+
     public IloConstraint[] addFlowConstraints() throws IloException {
         System.out.println("Adding flow constraints...");
         ArrayList<IloConstraint> flowConstraints = new ArrayList<>();
-        
+
         for (int i = 0; i < R; i++) {
             for (int i1 = 0; i1 < F; i1++) {
                 flowConstraints.add(cplex.addLe(c[i][i1], cplex.prod(T, w[i][i1])));
@@ -261,14 +265,14 @@ public class OCBASolver {
                 flowConstraints.add(cplex.addLe(k[i][i2], cplex.prod(T, o[i][i2])));
             }
         }
-        
+
         return flowConstraints.toArray(new IloConstraint[0]);
     }
-    
+
     public IloConstraint[] addDistanceConstraints() throws IloException {
         System.out.println("Adding distance constraints...");
         ArrayList<IloConstraint> distanceConstraints = new ArrayList<>();
-        
+
         for (int i = 0; i < R; i++) {
             for (int i1 = 0; i1 < F; i1++) {
                 distanceConstraints.add(cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), S));
@@ -285,14 +289,14 @@ public class OCBASolver {
                 distanceConstraints.add(cplex.addLe(cplex.prod(l[i][i2], o[i][i2]), S));
             }
         }
-        
+
         return distanceConstraints.toArray(new IloConstraint[0]);
     }
-    
+
     public IloConstraint[] addCapacityConstraints() throws IloException {
         System.out.println("Adding capacity constraints...");
         IloConstraint[] capacityConstraints = new IloConstraint[F + I];
-        
+
         IloLinearIntExpr[] demandPerLocker = new IloLinearIntExpr[F];
         for (int i = 0; i < F; i++) {
             demandPerLocker[i] = cplex.linearIntExpr();
@@ -318,13 +322,13 @@ public class OCBASolver {
 
             capacityConstraints[F + i] = cplex.addLe(demandPerPop[i], C);
         }
-        
+
         return capacityConstraints;
     }
-    
+
     public void addCompetitionConstraints() throws IloException {
         System.out.println("Adding competition constraints...");
-        int numElements = F * I *(R + M) + I * I * (R + M);
+        int numElements = F * I * (R + M) + I * I * (R + M);
         System.out.println(numElements);
 
         for (int i1 = 0; i1 < F; i1++) {
@@ -332,13 +336,13 @@ public class OCBASolver {
                 for (int i = 0; i < R; i++) {
                     cplex.addLe(cplex.prod(d[i][i1], w[i][i1]), cplex.sum(h[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
-                
+
                 for (int i = 0; i < M; i++) {
                     cplex.addLe(cplex.prod(e[i][i1], x[i][i1]), cplex.sum(l[i][i2] - 1, cplex.prod(T, cplex.sum(1, cplex.prod(-1, z[i2])))));
                 }
             }
         }
-        
+
         for (int i1 = 0; i1 < I; i1++) {
             cplex.addGe(z[i1], cplex.sum(1, cplex.prod(-1, cplex.prod(1.0 / C, demandPerPop[i1]))));
             //cplex.addGe(z[i], cplex.prod(1.0 / C, cplex.sum(C, cplex.prod(-1, demandPerPop[i]))));
@@ -355,13 +359,14 @@ public class OCBASolver {
             }
         }
     }
-    
+
     public void changeAlphaAndBeta(double[] alpha, double[] beta) {
-        this.alpha = alpha;
-        this.beta = beta;
+        this.alpha = Arrays.copyOf(alpha, alpha.length);
+        this.beta = Arrays.copyOf(beta, beta.length);
     }
-    
+
     public HashMap solve() throws IloException {
+        System.out.println("Solving...");
         if (cplex.solve()) {
             System.out.println("Total Weighted Obj = " + cplex.getObjValue());
             System.out.println("Demand Obj = " + cplex.getValue(demandObjective));
@@ -369,7 +374,7 @@ public class OCBASolver {
             System.out.println("Locker Obj (fixed) = " + Arrays.stream(y).sum());
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
-            
+
             /*writeObjectives(demandCoeff, distanceCoeff, lockerCoeff, 
                     cplex.getObjValue(), cplex.getValue(demandObjective), cplex.getValue(distanceObjective), cplex.getValue(lockerObjective), folderName);
 
@@ -380,74 +385,87 @@ public class OCBASolver {
             writeToCsv2Dim(x, "x", folderName);
             
             writeToCsv1Dim(y, "y", folderName);*/
-            
             HashMap<String, Integer> results = new HashMap<>();
             results.put("total", (int) Math.round(cplex.getObjValue()));
             results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
             results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
             results.put("locker", Arrays.stream(y).sum());
-            
+
             return results;
         } else {
             System.out.println("Solution not found.");
             return null;
         }
     }
-    
+
+    public void deleteConstraint(IloConstraint[] constraint) throws IloException {
+        cplex.delete(constraint);
+    }
+
+    public void initVariablesAndOtherConstraints() throws IloException {
+        createVariables();
+        
+        addBinaryConstraints();
+        addFlowConstraints();
+        addDistanceConstraints();
+        addCapacityConstraints();
+        addCompetitionConstraints();
+    }
+
     public void makeOutputFolder() {
         File dir = new File("output");
         if (!dir.exists()) {
             dir.mkdir();
         }
     }
-    
+
     public void makeOutputFolder(int folderName) {
         File dir = new File(String.format("output\\%d", folderName));
         if (!dir.exists()) {
             dir.mkdir();
         }
     }
-    
+
     public void writeObjectives(double demandCoeff, double distanceCoeff, double lockerCoeff,
             double totalObj, double demandObj, double distanceObj, double lockerObj, int folderName) {
         try {
             makeOutputFolder();
             makeOutputFolder(folderName);
-            
+
             FileWriter writer = new FileWriter(String.format("output\\%d\\objectives.txt", folderName));
-            
+
             writer.append("Coefficients\r\n");
             writer.append(String.format("Demand Obj = %.2f\r\n", demandCoeff));
             writer.append(String.format("Distance Obj = %.2f\r\n", distanceCoeff));
             writer.append(String.format("Locker Obj = %.2f\r\n", lockerCoeff));
             writer.append("\r\n");
-            
+
             writer.append("Adjusted coefficients\r\n");
             writer.append(String.format("Demand Obj = %f\r\n", demandCoeff / (demandCoeff - distanceCoeff - lockerCoeff)));
             writer.append(String.format("Distance Obj = %f\r\n", -distanceCoeff / (demandCoeff - distanceCoeff - lockerCoeff)));
             writer.append(String.format("Locker Obj = %f\r\n", -lockerCoeff / (demandCoeff - distanceCoeff - lockerCoeff)));
             writer.append("\r\n");
-            
+
             writer.append("Results\r\n");
             writer.append(String.format("Total Weighted Obj = %d\r\n", Math.round(totalObj)));
             writer.append(String.format("Demand Obj = %d\r\n", Math.round(demandObj)));
             writer.append(String.format("Distance Obj = %d\r\n", Math.round(distanceObj)));
             writer.append(String.format("Locker Obj = %d\r\n", Math.round(lockerObj)));
-            
+
             writer.flush();
             writer.close();
         } catch (IOException e) {
             System.err.println("Error writing to file " + e.getCause().toString());
         }
     }
-    
+
     public void writeToCsv1Dim(IloIntVar[] output, String fileName, int folderName) throws IloException {
         try {
             makeOutputFolder();
             makeOutputFolder(folderName);
-            
+
             FileWriter writer = new FileWriter(String.format("output\\%d\\%s.csv", folderName, fileName));
-            
+
             for (int i = 0; i < output.length; i++) {
                 writer.append(Double.toString(cplex.getValue(output[i])));
                 writer.append(',');
@@ -465,7 +483,7 @@ public class OCBASolver {
         try {
             makeOutputFolder();
             makeOutputFolder(folderName);
-            
+
             FileWriter writer = new FileWriter(String.format("output\\%d\\%s.csv", folderName, fileName));
 
             for (int i1 = 0; i1 < output.length; i1++) {

@@ -50,32 +50,26 @@ public class Main {
             System.out.println(a[i] + " " + newa[i]);
         }*/
         double[] alpha = new double[a.length], beta = new double[b.length];
-        Arrays.fill(alpha, 0.0317725);
-        Arrays.fill(beta, 0.01588);
         int[] y = CsvReader.readCsvFileForY("data/y.csv");
 
         try {
-            double demandCoeff = 1.0, distanceCoeff = -0.002, lockerCoeff = 150;
+            double demandCoeff = 1.0, distanceCoeff = -0.002, lockerCoeff = -150;
+            
+            Arrays.fill(alpha, 0.0317725);
+            Arrays.fill(beta, 0.01588);
 
             OCBASolver solver = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
-            solver.facilityLocation(demandCoeff, distanceCoeff, lockerCoeff, 0);
-            /*solver.createVariables();
-            solver.addDemandConstraints();
-            solver.addDistanceConstraints();
-            solver.addBinaryConstraints();
-            solver.addFlowConstraints();
-            solver.addCompetitionConstraints();*/
-
+            
             //variables
-            /*solver.createVariables();
-            solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+            solver.createVariables();
+            solver.initVariablesAndOtherConstraints();
             IloConstraint[] demandConstraints = solver.addDemandConstraints();
-            IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
-            IloConstraint[] flowConstraints = solver.addFlowConstraints();
-            IloConstraint[] distanceConstraints = solver.addDistanceConstraints();
-            IloConstraint[] capacityConstraints = solver.addCapacityConstraints();
-            solver.addCompetitionConstraints();
-            System.out.println("Solving...");
+            solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+            solver.solve();
+            
+            /*solver.changeAlphaAndBeta(alpha, beta);
+            solver.deleteConstraint(demandConstraints);
+            solver.addDemandConstraints();
             solver.solve();*/
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
