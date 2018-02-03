@@ -39,7 +39,7 @@ public class RNG {
         return generateDoubleStream(numEntries).toArray();
     }
     
-    public double[] generateUniformVars(int numEntries, int lb, int ub) {
+    public double[] generateUniformVars(int numEntries, double lb, double ub) {
         return generateDoubleStream(numEntries).map(u -> u * (ub - lb) + lb).toArray();
     }
     
@@ -56,7 +56,7 @@ public class RNG {
         return Arrays.copyOf(values, numEntries);
     }
     
-    public double[] generateNormalVars(int numEntries, int mean, int sd) {
+    public double[] generateNormalVars(int numEntries, double mean, double sd) {
         double[] values = numEntries % 2 == 1 ? generateDoubleStream(numEntries + 1).toArray() : generateDoubleStream(numEntries).toArray();
         
         for (int i = 0; i < numEntries; i += 2) {

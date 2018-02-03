@@ -28,6 +28,8 @@ import java.util.stream.Stream;
  */
 //d.csv -> 139, BF blank
 public class Main {
+    
+    private static RNG random = new RNG();
 
     public static void main(String[] args) {
         int[] a = CsvReader.readCsvFile1Dim("data/a.csv"); //demand at residential nodes
@@ -67,10 +69,13 @@ public class Main {
             solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
             solver.solve();
             
-            /*solver.changeAlphaAndBeta(alpha, beta);
+            alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
+            beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
+            
+            solver.changeAlphaAndBeta(alpha, beta);
             solver.deleteConstraint(demandConstraints);
             solver.addDemandConstraints();
-            solver.solve();*/
+            solver.solve();
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
