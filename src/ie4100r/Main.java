@@ -11,6 +11,7 @@ import Logic.OCBASolver;
 import Utils.RNG;
 import ilog.concert.IloConstraint;
 import ilog.concert.IloException;
+import ilog.concert.IloObjective;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -52,20 +53,35 @@ public class Main {
             System.out.println(a[i] + " " + newa[i]);
         }*/
         double[] alpha = new double[a.length], beta = new double[b.length];
-        int[] y = CsvReader.readCsvFileForY("data/y.csv");
+        int[][] y = new int[20][];
+        
+        for (int i = 0; i < 20; i++) {
+            y[i] = CsvReader.readCsvFileForY(String.format("output/%d/y.csv", i + 1));
+        }
 
         try {
             double demandCoeff = 1.0, distanceCoeff = -0.002, lockerCoeff = -150;
-            
-            Arrays.fill(alpha, 0.0317725);
-            Arrays.fill(beta, 0.01588);
 
-            OCBASolver solver = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
+            OCBASolver solver = new OCBASolver(a, b, d, e, h, l, p, C, S);
             solver.initVariablesAndOtherConstraints();
-            solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
-            IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
-            IloConstraint[] demandConstraints = solver.addDemandConstraints();
-            solver.solve();
+            
+            for (int i = 0; i < 20; i++) {
+                alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
+                beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
+
+                solver.setY(y[i]);
+                IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
+
+                solver.setAlphaAndBeta(alpha, beta);
+                IloConstraint[] demandConstraints = solver.addDemandConstraints();
+
+                IloObjective objective = solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+                solver.solve();
+                
+                solver.deleteObjective(objective);
+                solver.deleteConstraint(binaryConstraints);
+                solver.deleteConstraint(demandConstraints);
+            }
             
             /*alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
             beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);

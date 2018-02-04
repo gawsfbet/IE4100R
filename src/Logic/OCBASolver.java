@@ -66,13 +66,11 @@ public class OCBASolver {
     IloLinearIntExpr distanceObjective;
     IloLinearIntExpr[] demandPerPop;
 
-    public OCBASolver(int[] a, int[] b, double[] alpha, double[] beta, int[][] d, int[][] e, int[][] h, int[][] l, int p, int C, int S, int[] y) throws IloException {
+    public OCBASolver(int[] a, int[] b, int[][] d, int[][] e, int[][] h, int[][] l, int p, int C, int S) throws IloException {
         this.cplex = new IloCplex();
 
         this.a = a;
         this.b = b;
-        this.alpha = Arrays.copyOf(alpha, alpha.length);
-        this.beta = Arrays.copyOf(beta, beta.length);
         this.d = d;
         this.e = e;
         this.h = h;
@@ -86,8 +84,6 @@ public class OCBASolver {
         this.p = p;
         this.C = C;
         this.S = S;
-
-        this.y = y;
 
         cplex.setOut(null);
     }
@@ -361,18 +357,18 @@ public class OCBASolver {
         }
     }
 
-    public void changeAlphaAndBeta(double[] alpha, double[] beta) {
+    public void setAlphaAndBeta(double[] alpha, double[] beta) {
         this.alpha = Arrays.copyOf(alpha, alpha.length);
         this.beta = Arrays.copyOf(beta, beta.length);
     }
+    
+    public void setY(int[] y) {
+        this.y = Arrays.copyOf(y, y.length);
+    }
 
-    public HashMap solve() throws IloException {
+    public HashMap<String, Integer> solve() throws IloException {
         System.out.println("Solving...");
         if (cplex.solve()) {
-            System.out.println("Total Weighted Obj = " + cplex.getObjValue());
-            System.out.println("Demand Obj = " + cplex.getValue(demandObjective));
-            System.out.println("Distance Obj = " + cplex.getValue(distanceObjective));
-            System.out.println("Locker Obj (fixed) = " + Arrays.stream(y).sum());
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
 
@@ -391,6 +387,11 @@ public class OCBASolver {
             results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
             results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
             results.put("locker", Arrays.stream(y).sum());
+            
+            System.out.println("Total Weighted Obj = " + results.get("total"));
+            System.out.println("Demand Obj = " + results.get("demand"));
+            System.out.println("Distance Obj = " + results.get("distance"));
+            System.out.println("Locker Obj (fixed) = " + results.get("locker"));
 
             return results;
         } else {
@@ -401,6 +402,10 @@ public class OCBASolver {
 
     public void deleteConstraint(IloConstraint[] constraint) throws IloException {
         cplex.delete(constraint);
+    }
+    
+    public void deleteObjective(IloObjective objective) throws IloException {
+        cplex.delete(objective);
     }
 
     public void initVariablesAndOtherConstraints() throws IloException {
