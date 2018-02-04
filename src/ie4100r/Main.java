@@ -61,21 +61,19 @@ public class Main {
             Arrays.fill(beta, 0.01588);
 
             OCBASolver solver = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
-            
-            //variables
-            solver.createVariables();
             solver.initVariablesAndOtherConstraints();
-            IloConstraint[] demandConstraints = solver.addDemandConstraints();
             solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+            IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
+            IloConstraint[] demandConstraints = solver.addDemandConstraints();
             solver.solve();
             
-            alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
+            /*alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
             beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
             
             solver.changeAlphaAndBeta(alpha, beta);
             solver.deleteConstraint(demandConstraints);
             solver.addDemandConstraints();
-            solver.solve();
+            solver.solve();*/
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

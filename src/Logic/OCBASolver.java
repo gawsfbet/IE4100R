@@ -227,6 +227,7 @@ public class OCBASolver {
         return demandConstraints;
     }
 
+    //remove these constraints to change y
     public IloConstraint[] addBinaryConstraints() throws IloException {
         System.out.println("Adding binary constraints...");
         ArrayList<IloConstraint> binaryConstraints = new ArrayList<>();
@@ -405,7 +406,6 @@ public class OCBASolver {
     public void initVariablesAndOtherConstraints() throws IloException {
         createVariables();
         
-        addBinaryConstraints();
         addFlowConstraints();
         addDistanceConstraints();
         addCapacityConstraints();
