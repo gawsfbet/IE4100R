@@ -44,14 +44,6 @@ public class Main {
         int C = 540; //locker capacity
         int S = 1250; //distance permitted
 
-        /*RNG rng = new RNG();
-        double[] aModifierPercent = rng.generateNormalVars(a.length, 0, 5);
-        
-        int[] newa = IntStream.range(0, a.length).map(i -> (int) Math.round((aModifierPercent[i] + 100) / 100 * a[i])).toArray();
-        
-        for (int i = 0; i < newa.length; i++) {
-            System.out.println(a[i] + " " + newa[i]);
-        }*/
         double[] alpha = new double[a.length], beta = new double[b.length];
         int[][] y = new int[20][];
         
@@ -82,16 +74,12 @@ public class Main {
                 solver.deleteConstraint(binaryConstraints);
                 solver.deleteConstraint(demandConstraints);
             }
-            
-            /*alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
-            beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
-            
-            solver.changeAlphaAndBeta(alpha, beta);
-            solver.deleteConstraint(demandConstraints);
-            solver.addDemandConstraints();
-            solver.solve();*/
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public double calculateMean(ArrayList<Double> values) {
+        return 0;
     }
 }
