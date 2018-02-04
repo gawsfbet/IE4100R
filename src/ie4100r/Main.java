@@ -60,22 +60,30 @@ public class Main {
             Arrays.fill(alpha, 0.0317725);
             Arrays.fill(beta, 0.01588);
 
-            OCBASolver solver = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
+            OCBASolver[] solvers = new OCBASolver[20];
+            for (int i = 0; i < 20; i++) {
+                solvers[i] = new OCBASolver(a, b, alpha, beta, d, e, h, l, p, C, S, y);
+            }
             
-            //variables
-            solver.createVariables();
-            solver.initVariablesAndOtherConstraints();
-            IloConstraint[] demandConstraints = solver.addDemandConstraints();
-            solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
-            solver.solve();
+            Arrays.stream(solvers).forEach(solver -> {
+                try {
+                    solver.createVariables();
+                    solver.initVariablesAndOtherConstraints();
+                    IloConstraint[] demandConstraints = solver.addDemandConstraints();
+                    solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+                    solver.solve();
+                } catch (IloException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
             
-            alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
+            /*alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
             beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
             
             solver.changeAlphaAndBeta(alpha, beta);
             solver.deleteConstraint(demandConstraints);
             solver.addDemandConstraints();
-            solver.solve();
+            solver.solve();*/
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
