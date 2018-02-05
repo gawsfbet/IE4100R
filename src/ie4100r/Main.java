@@ -122,6 +122,7 @@ public class Main {
                 for (int i = 0; i < k; i++) {
                     Nnext[i] = (int) Math.round(totalComputingBudget * ratios[i] / totalRatio);
                 }
+                System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
             }
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
