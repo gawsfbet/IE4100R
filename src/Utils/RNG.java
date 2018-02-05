@@ -68,4 +68,15 @@ public class RNG {
         
         return Arrays.copyOf(values, numEntries);
     }
+    
+    public void generateNormalVars(double[] array, double mean, double sd) {
+        for (int i = 0; i < array.length; i += 2) {
+            double u1 = random.nextDouble(), u2 = random.nextDouble();
+            double n1 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2), n2 = Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+            array[i] = mean + sd * n1;
+            if (i < array.length - 1) {
+                array[i + 1] = mean + sd * n2;
+            }
+        }
+    }
 }

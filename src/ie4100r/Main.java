@@ -71,15 +71,14 @@ public class Main {
             while (Arrays.stream(Nnext).sum() < T) {
                 //simulation part
                 for (int i = 0; i < k; i++) {
-                    solver.setY(y[i]);
-                    IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
+                    solver.setY(y.length);
+                    IloConstraint[] binaryConstraints = solver.addBinaryConstraints(y[i]);
                     
                     for (int j = 0; j < Nnext[i] - Nlast[i]; j++) { //simulation for each design
-                        alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
-                        beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
+                        random.generateNormalVars(alpha, 0.0317725, 0.005);
+                        random.generateNormalVars(beta, 0.01588, 0.0025);
 
-                        solver.setAlphaAndBeta(alpha, beta);
-                        IloConstraint[] demandConstraints = solver.addDemandConstraints();
+                        IloConstraint[] demandConstraints = solver.addDemandConstraints(alpha, beta);
 
                         IloObjective objective = solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
                         results[i].add(solver.solve());

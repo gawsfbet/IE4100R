@@ -41,14 +41,15 @@ public class OCBASolver {
     private int[] a; //Demand volume at residential nodes
     private int[] b; //Demand volume at MRT nodes
     //Now alpha and beta is randomised for each location
-    private double[] alpha; //Proportion of residents that use E-commerce
-    private double[] beta; //Proportion of MRT riders that use E-commerce
+    //private double[] alpha; //Proportion of residents that use E-commerce
+    //private double[] beta; //Proportion of MRT riders that use E-commerce
     private int[][] d; //Distance from resident demand node r to shopping mall f
     private int[][] e; //Distance from MRT demand mode m to shopping mall f
     private int[][] h; //Distance from resident demand node r to POPStation i
     private int[][] l; //Distance from MRT demand mode m to POPStation i
 
-    private int[] y; //new variable: facilities that were placed
+    //private int[] y; //new variable: facilities that were placed
+    private int amtLockers;
 
     IloIntVar[][] c; //demand from residential r to shopping mall f
     IloIntVar[][] g; //demand from MRT m to shopping mall f
@@ -86,53 +87,6 @@ public class OCBASolver {
         this.S = S;
 
         cplex.setOut(null);
-    }
-
-    public HashMap facilityLocation(double demandCoeff, double distanceCoeff, double lockerCoeff, int folderName) throws IloException {
-        assert demandCoeff >= 0;
-        assert distanceCoeff <= 0;
-        assert lockerCoeff <= 0;
-
-        System.out.println("LP problem formulated with:");
-        System.out.println(String.format("%d residential nodes", R));
-        System.out.println(String.format("%d MRT nodes", M));
-        System.out.println(String.format("%d potential locations", F));
-        System.out.println(String.format("%d existing POPStations", I));
-        System.out.println();
-        System.out.println(String.format("Number of new lockers: %d", p));
-        System.out.println(String.format("Maximum allowable distance: %d metres", S));
-        System.out.println(String.format("Locker capacity: %d", C));
-        System.out.println();
-
-        //variables
-        createVariables();
-
-        //expressions
-        defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
-
-        //constraints
-        //Demand constraints
-        IloConstraint[] demandConstraints = addDemandConstraints();
-
-        //Binary constraints
-        IloConstraint[] binaryConstraints = addBinaryConstraints();
-
-        //Flow constraints
-        IloConstraint[] flowConstraints = addFlowConstraints();
-
-        //Distance constraints
-        IloConstraint[] distanceConstraints = addDistanceConstraints();
-
-        //Capacity constraints
-        IloConstraint[] capacityConstraints = addCapacityConstraints();
-
-        //Competition constraints
-        addCompetitionConstraints();
-        //cplex.addLe(cplex.sum(y), p);
-
-        //solve
-        System.out.println("Solving...");
-        return solve();
     }
 
     public void createVariables() throws IloException {
@@ -203,28 +157,28 @@ public class OCBASolver {
         IloNumExpr combinedObjective = cplex.sum(
                 cplex.prod(demandCoeff, demandObjective), //maximize
                 cplex.prod(distanceCoeff, distanceObjective)); //minimize
-        combinedObjective = cplex.sum(lockerCoeff * Arrays.stream(y).sum(), combinedObjective);
+        combinedObjective = cplex.sum(lockerCoeff * amtLockers, combinedObjective);
         //define objective
         return cplex.addMaximize(combinedObjective);
     }
 
     //remove these constraints to change alpha and beta
-    public IloConstraint[] addDemandConstraints() throws IloException {
+    public IloConstraint[] addDemandConstraints(double[] alpha, double[] beta) throws IloException {
         System.out.println("Adding demand constraints...");
         IloConstraint[] demandConstraints = new IloConstraint[R + M];
 
         for (int i = 0; i < R; i++) {
-            demandConstraints[i] = cplex.addGe(alpha[i] * a[i], cplex.sum(cplex.sum(c[i]), cplex.sum(j[i])));
+            demandConstraints[i] = cplex.addGe(alpha[i] * a[i] < 0 ? 0 : alpha[i] * a[i], cplex.sum(cplex.sum(c[i]), cplex.sum(j[i])));
         }
         for (int i = 0; i < M; i++) {
-            demandConstraints[R + i] = cplex.addGe(beta[i] * b[i], cplex.sum(cplex.sum(g[i]), cplex.sum(k[i])));
+            demandConstraints[R + i] = cplex.addGe(beta[i] * b[i] < 0 ? 0 : beta[i] * b[i], cplex.sum(cplex.sum(g[i]), cplex.sum(k[i])));
         }
 
         return demandConstraints;
     }
 
     //remove these constraints to change y
-    public IloConstraint[] addBinaryConstraints() throws IloException {
+    public IloConstraint[] addBinaryConstraints(int[] y) throws IloException {
         System.out.println("Adding binary constraints...");
         ArrayList<IloConstraint> binaryConstraints = new ArrayList<>();
 
@@ -356,14 +310,9 @@ public class OCBASolver {
             }
         }
     }
-
-    public void setAlphaAndBeta(double[] alpha, double[] beta) {
-        this.alpha = Arrays.copyOf(alpha, alpha.length);
-        this.beta = Arrays.copyOf(beta, beta.length);
-    }
     
-    public void setY(int[] y) {
-        this.y = Arrays.copyOf(y, y.length);
+    public void setY(int amtLockers) {
+        this.amtLockers = amtLockers;
     }
 
     public HashMap<String, Integer> solve() throws IloException {
@@ -386,7 +335,7 @@ public class OCBASolver {
             results.put("total", (int) Math.round(cplex.getObjValue()));
             results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
             results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
-            results.put("locker", Arrays.stream(y).sum());
+            results.put("locker", amtLockers);
             
             System.out.println("Total Weighted Obj = " + results.get("total"));
             System.out.println("Demand Obj = " + results.get("demand"));
