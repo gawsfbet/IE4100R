@@ -6,22 +6,17 @@
 package ie4100r;
 
 import FileManager.CsvReader;
-import Logic.MIPSolver;
 import Logic.OCBASolver;
 import Utils.RNG;
 import ilog.concert.IloConstraint;
 import ilog.concert.IloException;
 import ilog.concert.IloObjective;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  *
@@ -33,6 +28,7 @@ public class Main {
     private static RNG random = new RNG();
 
     public static void main(String[] args) {
+        //fixed parameters
         int[] a = CsvReader.readCsvFile1Dim("data/a.csv"); //demand at residential nodes
         int[] b = CsvReader.readCsvFile1Dim("data/b.csv"); //demand at MRT nodes
         int[][] d = CsvReader.readCsvFile2Dim("data/d.csv");
@@ -43,43 +39,109 @@ public class Main {
         int p = 100; //number of new lockers
         int C = 540; //locker capacity
         int S = 1250; //distance permitted
-
-        double[] alpha = new double[a.length], beta = new double[b.length];
-        int[][] y = new int[20][];
         
-        for (int i = 0; i < 20; i++) {
+        int k = 20; //number of designs
+        
+        //variable parameters
+        double[] alpha = new double[a.length], beta = new double[b.length];
+        int[][] y = new int[k][];
+        for (int i = 0; i < k; i++) {
             y[i] = CsvReader.readCsvFileForY(String.format("output/%d/y.csv", i + 1));
         }
+        
+        //OCBA parameters
+        int T = 250, n0 = 10, totalComputingBudget = k * n0; //max allowed computing budget and initial reps
+        int[] Nlast = new int[k], Nnext = new int[k]; //number of replications
+        Arrays.fill(Nlast, 0);
+        Arrays.fill(Nnext, n0);
+        int delta = 5; //incremental number of simulations
+        //list of results from model
+        ArrayList<HashMap<String, Integer>>[] results = new ArrayList[k];
+        Arrays.parallelSetAll(results, i -> new ArrayList<>());
 
         try {
-            double demandCoeff = 1.0, distanceCoeff = -0.002, lockerCoeff = -150;
+            final double demandCoeff = 1.0, distanceCoeff = -0.002, lockerCoeff = -150;
 
             OCBASolver solver = new OCBASolver(a, b, d, e, h, l, p, C, S);
             solver.initVariablesAndOtherConstraints();
             
-            for (int i = 0; i < 20; i++) {
-                alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
-                beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
+            double[] J = new double[k]; //sample means
+            double[] s = new double[k]; //sample sd
+            
+            while (Arrays.stream(Nnext).sum() < T) {
+                //simulation part
+                for (int i = 0; i < k; i++) {
+                    solver.setY(y[i]);
+                    IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
+                    
+                    for (int j = 0; j < Nnext[i] - Nlast[i]; j++) { //simulation for each design
+                        alpha = random.generateNormalVars(alpha.length, 0.0317725, 0.005);
+                        beta = random.generateNormalVars(beta.length, 0.01588, 0.0025);
 
-                solver.setY(y[i]);
-                IloConstraint[] binaryConstraints = solver.addBinaryConstraints();
+                        solver.setAlphaAndBeta(alpha, beta);
+                        IloConstraint[] demandConstraints = solver.addDemandConstraints();
 
-                solver.setAlphaAndBeta(alpha, beta);
-                IloConstraint[] demandConstraints = solver.addDemandConstraints();
+                        IloObjective objective = solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
+                        results[i].add(solver.solve());
 
-                IloObjective objective = solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
-                solver.solve();
+                        solver.deleteObjective(objective);
+                        solver.deleteConstraint(demandConstraints);
+                    }
+                    
+                    J[i] = calculateMean(results[i]);
+                    s[i] = calculateSD(results[i], J[i]);
+                    solver.deleteConstraint(binaryConstraints);
+                }
                 
-                solver.deleteObjective(objective);
-                solver.deleteConstraint(binaryConstraints);
-                solver.deleteConstraint(demandConstraints);
+                //allocation part
+                int best = maxIndex(J), ref;
+                IntStream.range(0, k).forEach(i -> Nlast[i] = Nnext[i]);
+                
+                totalComputingBudget += delta;
+                double[] ratios = new double[k];
+                if (best == 0) {
+                    ratios[1] = 1;
+                    ref = 1;
+                } else {
+                    ratios[0] = 1;
+                    ref = 0;
+                }
+                for (int i = 0; i < k; i++) {
+                    if (i == best || i == ref) continue;
+
+                    ratios[i] = ((s[i] * (J[best] - J[ref])) / (s[ref] * (J[best] - J[i]))) * ((s[i] * (J[best] - J[ref])) / (s[ref] * (J[best] - J[i])));
+                }
+                ratios[best] = s[best] * Math.sqrt(IntStream.range(0, k).filter(i -> i != best).mapToDouble(i -> (ratios[i] / s[i]) * (ratios[i] / s[i])).sum());
+  
+                double totalRatio = Arrays.stream(ratios).sum();
+                for (int i = 0; i < k; i++) {
+                    Nnext[i] = (int) Math.round(totalComputingBudget * ratios[i] / totalRatio);
+                }
             }
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public double calculateMean(ArrayList<Double> values) {
-        return 0;
+    public static double calculateMean(ArrayList<HashMap<String, Integer>> results) {
+        return results.stream().mapToDouble(result -> result.get("total")).sum() / results.size();
+    }
+    
+    public static double calculateSD(ArrayList<HashMap<String, Integer>> results, double mean) {
+        return Math.sqrt(results.stream().mapToDouble(result -> result.get("total") - mean).sum() / (results.size() - 1));
+    }
+    
+    public static int maxIndex(double[] values) {
+        double max = Double.NEGATIVE_INFINITY;
+        int b = 0;
+        
+        for (int i = 0; i < values.length; i++) {
+            if (max < values[i]) {
+                max = values[i];
+                b = i;
+            }
+        }
+        
+        return b;
     }
 }
