@@ -87,10 +87,11 @@ public class OCBASolver {
         this.S = S;
 
         cplex.setOut(null);
+        cplex.setParam(IloCplex.Param.WorkDir, "D:/Documents/NetBeansProjects/IE4100R/temp/");
+        cplex.setParam(IloCplex.Param.MIP.Strategy.File, 3);
     }
 
     public void createVariables() throws IloException {
-        System.out.println("Creating decision variables...");
         c = new IloIntVar[R][F]; //demand from residential r to shopping mall f
         g = new IloIntVar[M][F]; //demand from MRT m to shopping mall f
         j = new IloIntVar[R][I]; //demand from residential r to POPStation i
@@ -164,7 +165,6 @@ public class OCBASolver {
 
     //remove these constraints to change alpha and beta
     public IloConstraint[] addDemandConstraints(double[] alpha, double[] beta) throws IloException {
-        System.out.println("Adding demand constraints...");
         IloConstraint[] demandConstraints = new IloConstraint[R + M];
 
         for (int i = 0; i < R; i++) {
@@ -179,7 +179,6 @@ public class OCBASolver {
 
     //remove these constraints to change y
     public IloConstraint[] addBinaryConstraints(int[] y) throws IloException {
-        System.out.println("Adding binary constraints...");
         ArrayList<IloConstraint> binaryConstraints = new ArrayList<>();
 
         for (int i = 0; i < R; i++) {
@@ -197,7 +196,6 @@ public class OCBASolver {
     }
 
     public IloConstraint[] addFlowConstraints() throws IloException {
-        System.out.println("Adding flow constraints...");
         ArrayList<IloConstraint> flowConstraints = new ArrayList<>();
 
         for (int i = 0; i < R; i++) {
@@ -221,7 +219,6 @@ public class OCBASolver {
     }
 
     public IloConstraint[] addDistanceConstraints() throws IloException {
-        System.out.println("Adding distance constraints...");
         ArrayList<IloConstraint> distanceConstraints = new ArrayList<>();
 
         for (int i = 0; i < R; i++) {
@@ -245,7 +242,6 @@ public class OCBASolver {
     }
 
     public IloConstraint[] addCapacityConstraints() throws IloException {
-        System.out.println("Adding capacity constraints...");
         IloConstraint[] capacityConstraints = new IloConstraint[F + I];
 
         IloLinearIntExpr[] demandPerLocker = new IloLinearIntExpr[F];
@@ -278,9 +274,7 @@ public class OCBASolver {
     }
 
     public void addCompetitionConstraints() throws IloException {
-        System.out.println("Adding competition constraints...");
         int numElements = F * I * (R + M) + I * I * (R + M);
-        System.out.println(numElements);
 
         for (int i1 = 0; i1 < F; i1++) {
             for (int i2 = 0; i2 < I; i2++) {
@@ -316,7 +310,6 @@ public class OCBASolver {
     }
 
     public HashMap<String, Integer> solve() throws IloException {
-        System.out.println("Solving...");
         if (cplex.solve()) {
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
@@ -337,10 +330,10 @@ public class OCBASolver {
             results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
             results.put("locker", amtLockers);
             
-            System.out.println("Total Weighted Obj = " + results.get("total"));
+            /*System.out.println("Total Weighted Obj = " + results.get("total"));
             System.out.println("Demand Obj = " + results.get("demand"));
             System.out.println("Distance Obj = " + results.get("distance"));
-            System.out.println("Locker Obj (fixed) = " + results.get("locker"));
+            System.out.println("Locker Obj (fixed) = " + results.get("locker"));*/
 
             return results;
         } else {
@@ -358,12 +351,15 @@ public class OCBASolver {
     }
 
     public void initVariablesAndOtherConstraints() throws IloException {
+        System.out.println("Initialising model...");
         createVariables();
         
         addFlowConstraints();
         addDistanceConstraints();
         addCapacityConstraints();
         addCompetitionConstraints();
+        
+        System.out.println("Model initialised");
     }
 
     public void makeOutputFolder() {

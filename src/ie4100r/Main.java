@@ -68,13 +68,19 @@ public class Main {
             double[] J = new double[k]; //sample means
             double[] s = new double[k]; //sample sd
             
+            int count = 0;
+            
             while (Arrays.stream(Nnext).sum() < T) {
+                count++;
                 //simulation part
                 for (int i = 0; i < k; i++) {
+                    System.out.println(String.format("Design %d, performing %d replications", i + 1, Nnext[i] - Nlast[i]));
                     solver.setY(y.length);
                     IloConstraint[] binaryConstraints = solver.addBinaryConstraints(y[i]);
                     
                     for (int j = 0; j < Nnext[i] - Nlast[i]; j++) { //simulation for each design
+                        System.out.println(String.format("Iteration %d, simulating design %d, replication %d", count, i + 1, j + 1));
+                        
                         random.generateNormalVars(alpha, 0.0317725, 0.005);
                         random.generateNormalVars(beta, 0.01588, 0.0025);
 
