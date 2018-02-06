@@ -309,7 +309,7 @@ public class OCBASolver {
         this.amtLockers = amtLockers;
     }
 
-    public HashMap<String, Integer> solve() throws IloException {
+    public HashMap<String, Double> solve() throws IloException {
         if (cplex.solve()) {
             //System.out.println("x   = " + cplex.getValue(x));
             //System.out.println("y   = " + cplex.getValue(y));
@@ -324,11 +324,11 @@ public class OCBASolver {
             writeToCsv2Dim(x, "x", folderName);
             
             writeToCsv1Dim(y, "y", folderName);*/
-            HashMap<String, Integer> results = new HashMap<>();
-            results.put("total", (int) Math.round(cplex.getObjValue()));
-            results.put("demand", (int) Math.round(cplex.getValue(demandObjective)));
-            results.put("distance", (int) Math.round(cplex.getValue(distanceObjective)));
-            results.put("locker", amtLockers);
+            HashMap<String, Double> results = new HashMap<>();
+            results.put("total", (double) Math.round(cplex.getObjValue()));
+            results.put("demand", (double) Math.round(cplex.getValue(demandObjective)));
+            results.put("distance", (double) Math.round(cplex.getValue(distanceObjective)));
+            results.put("locker", (double) amtLockers);
             
             /*System.out.println("Total Weighted Obj = " + results.get("total"));
             System.out.println("Demand Obj = " + results.get("demand"));

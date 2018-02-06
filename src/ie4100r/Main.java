@@ -56,7 +56,7 @@ public class Main {
         Arrays.fill(Nnext, n0);
         int delta = 5; //incremental number of simulations
         //list of results from model
-        ArrayList<HashMap<String, Integer>>[] results = new ArrayList[k];
+        ArrayList<HashMap<String, Double>>[] results = new ArrayList[k];
         Arrays.parallelSetAll(results, i -> new ArrayList<>());
 
         try {
@@ -92,10 +92,10 @@ public class Main {
                         solver.deleteObjective(objective);
                         solver.deleteConstraint(demandConstraints);
                     }
+                    solver.deleteConstraint(binaryConstraints);
                     
                     J[i] = calculateMean(results[i]);
                     s[i] = calculateSD(results[i], J[i]);
-                    solver.deleteConstraint(binaryConstraints);
                 }
                 
                 //allocation part
@@ -129,12 +129,12 @@ public class Main {
         }
     }
     
-    public static double calculateMean(ArrayList<HashMap<String, Integer>> results) {
+    public static double calculateMean(ArrayList<HashMap<String, Double>> results) {
         return results.stream().mapToDouble(result -> result.get("total")).sum() / results.size();
     }
     
-    public static double calculateSD(ArrayList<HashMap<String, Integer>> results, double mean) {
-        return Math.sqrt(results.stream().mapToDouble(result -> result.get("total") - mean).sum() / (results.size() - 1));
+    public static double calculateSD(ArrayList<HashMap<String, Double>> results, double mean) {
+        return Math.sqrt(results.stream().mapToDouble(result -> (result.get("total") - mean) * (result.get("total") - mean)).sum() / (results.size() - 1));
     }
     
     public static int maxIndex(double[] values) {
