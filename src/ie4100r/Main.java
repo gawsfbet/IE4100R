@@ -124,6 +124,8 @@ public class Main {
                 }
                 System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
             }
+            
+            CsvReader.writeDataToFiles(results, "ocba");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

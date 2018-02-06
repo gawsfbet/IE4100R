@@ -70,7 +70,7 @@ public class CsvReader {
         }
     }
     
-    public static void writeDataToFiles(ArrayList<HashMap<String, Integer>>[] data, String folderName) {
+    public static void writeDataToFiles(ArrayList<HashMap<String, Double>>[] data, String folderName) {
         try {
             File dir = new File(folderName);
             if (!dir.exists()) {
@@ -82,12 +82,12 @@ public class CsvReader {
             FileWriter writer3 = new FileWriter(String.format("%s\\locker.csv", folderName));
             
             for (int i = 0; i < data.length; i++) {
-                for (HashMap<String, Integer> entry : data[i]) {
-                    writer1.append(Integer.toString(entry.get("demand")));
+                for (HashMap<String, Double> entry : data[i]) {
+                    writer1.append(Integer.toString((int) Math.round(entry.get("demand"))));
                     writer1.append(',');
-                    writer2.append(Integer.toString(entry.get("distance")));
+                    writer2.append(Integer.toString((int) Math.round(entry.get("distance"))));
                     writer2.append(',');
-                    writer3.append(Integer.toString(entry.get("locker")));
+                    writer3.append(Integer.toString((int) Math.round(entry.get("locker"))));
                     writer3.append(',');
                 }
                 writer1.append('\n');
@@ -102,6 +102,7 @@ public class CsvReader {
             writer1.close();
             writer2.close();
             writer3.close();
+            System.out.println("Simulation data written to files in folder " + dir.getAbsolutePath());
         } catch (IOException e) {
             System.err.println("Error writing to file " + e.getCause().toString());
         }
