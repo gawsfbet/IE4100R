@@ -75,7 +75,7 @@ public class Main {
                 //simulation part
                 for (int i = 0; i < k; i++) {
                     System.out.println(String.format("Design %d, performing %d replications", i + 1, Nnext[i] - Nlast[i]));
-                    solver.setY(y.length);
+                    solver.setY(Arrays.stream(y[i]).sum());
                     IloConstraint[] binaryConstraints = solver.addBinaryConstraints(y[i]);
                     
                     for (int j = 0; j < Nnext[i] - Nlast[i]; j++) { //simulation for each design
