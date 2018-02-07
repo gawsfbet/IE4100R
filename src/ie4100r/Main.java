@@ -62,7 +62,7 @@ public class Main {
         Arrays.parallelSetAll(iterations, i -> new ArrayList<>());
 
         try {
-            final double demandCoeff = 1.0, distanceCoeff = -0.2, lockerCoeff = -100;
+            final double demandCoeff = 1.0, distanceCoeff = -0.3, lockerCoeff = -150;
 
             OCBASolver solver = new OCBASolver(a, b, d, e, h, l, p, C, S);
             solver.initVariablesAndOtherConstraints();
