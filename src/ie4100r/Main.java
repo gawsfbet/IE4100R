@@ -76,12 +76,12 @@ public class Main {
                 count++;
                 //simulation part
                 for (int i = 0; i < k; i++) {
-                    iterations[i].add(count);
                     System.out.println(String.format("Design %d, performing %d replications", i + 1, Nnext[i] - Nlast[i]));
                     solver.setY(Arrays.stream(y[i]).sum());
                     IloConstraint[] binaryConstraints = solver.addBinaryConstraints(y[i]);
                     
                     for (int j = 0; j < Nnext[i] - Nlast[i]; j++) { //simulation for each design
+                        iterations[i].add(count);
                         System.out.println(String.format("Iteration %d, simulating design %d, replication %d", count, i + 1, j + 1));
                         
                         random.generateNormalVars(alpha, 0.0317725, 0.01);
@@ -90,7 +90,8 @@ public class Main {
                         IloConstraint[] demandConstraints = solver.addDemandConstraints(alpha, beta);
 
                         IloObjective objective = solver.defineObjectives(demandCoeff, distanceCoeff, lockerCoeff);
-                        results[i].add(solver.solve());
+                        HashMap<String, Double> result = solver.solve();
+                        if (result != null) results[i].add(result);
 
                         solver.deleteObjective(objective);
                         solver.deleteConstraint(demandConstraints);
