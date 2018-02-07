@@ -144,10 +144,10 @@ public class OCBASolver {
 
         distanceObjective = cplex.linearIntExpr();
         for (int i = 0; i < R; i++) {
-            distanceObjective.addTerms(d[i], c[i]);
+            distanceObjective.addTerms(d[i], w[i]);
         }
         for (int i = 0; i < M; i++) {
-            distanceObjective.addTerms(e[i], g[i]);
+            distanceObjective.addTerms(e[i], x[i]);
         }
 
         /*IloLinearIntExpr lockerObjective = cplex.linearIntExpr();
