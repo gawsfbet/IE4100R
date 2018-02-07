@@ -43,6 +43,12 @@ public class RNG {
         return generateDoubleStream(numEntries).map(u -> u * (ub - lb) + lb).toArray();
     }
     
+    public void generateUniformVars(double[] array, double lb, double ub) {
+        for (int i = 0; i < array.length; i++) {
+            array[i] = random.nextDouble() * (ub - lb) + lb;
+        }
+    }
+    
     public double[] generateNormalVars(int numEntries) {
         double[] values = numEntries % 2 == 1 ? generateDoubleStream(numEntries + 1).toArray() : generateDoubleStream(numEntries).toArray();
         
