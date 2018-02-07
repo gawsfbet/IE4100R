@@ -84,8 +84,8 @@ public class Main {
                     for (int j = 0; j < Nnext[i] - Nlast[i]; j++) { //simulation for each design
                         System.out.println(String.format("Iteration %d, simulating design %d, replication %d", count, i + 1, j + 1));
                         
-                        random.generateNormalVars(alpha, 0.0317725, 0.005);
-                        random.generateNormalVars(beta, 0.01588, 0.0025);
+                        random.generateNormalVars(alpha, 0.0317725, 0.01);
+                        random.generateNormalVars(beta, 0.01588, 0.005);
 
                         IloConstraint[] demandConstraints = solver.addDemandConstraints(alpha, beta);
 
@@ -128,8 +128,8 @@ public class Main {
                 System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
             }
             
-            CsvReader.writeDataToFiles(results, "ocba");
-            CsvReader.writeIterToFiles(iterations, "ocba");
+            CsvReader.writeDataToFiles(results, "ocba/largesd");
+            CsvReader.writeIterToFiles(iterations, "ocba/largesd");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
