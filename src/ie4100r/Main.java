@@ -58,8 +58,11 @@ public class Main {
         //list of results from model
         ArrayList<HashMap<String, Double>>[] results = new ArrayList[k];
         ArrayList<Integer>[] iterations = new ArrayList[k];
+        ArrayList<Double>[] means = new ArrayList[k], sds = new ArrayList[k];
         Arrays.parallelSetAll(results, i -> new ArrayList<>());
         Arrays.parallelSetAll(iterations, i -> new ArrayList<>());
+        Arrays.parallelSetAll(means, i -> new ArrayList<>());
+        Arrays.parallelSetAll(sds, i -> new ArrayList<>());
 
         try {
             final double demandCoeff = 1.0, distanceCoeff = -0.3, lockerCoeff = -150;
@@ -100,6 +103,8 @@ public class Main {
                     
                     J[i] = calculateMean(results[i]);
                     s[i] = calculateSD(results[i], J[i]);
+                    means[i].add(J[i]);
+                    sds[i].add(s[i]);
                 }
                 
                 //allocation part
@@ -129,8 +134,9 @@ public class Main {
                 System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
             }
             
-            CsvReader.writeDataToFiles(results, "ocba/largesd");
-            CsvReader.writeIterToFiles(iterations, "ocba/largesd");
+            CsvReader.writeDataToFiles(results, "ocba\\largesd");
+            CsvReader.writeIterToFiles(iterations, "ocba\\largesd");
+            CsvReader.writeMeanToFiles(means, sds, "ocba\\largesd");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

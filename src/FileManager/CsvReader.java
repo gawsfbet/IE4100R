@@ -132,4 +132,37 @@ public class CsvReader {
             System.err.println("Error writing to file " + e.getCause().toString());
         }
     }
+    
+    public static void writeMeanToFiles(ArrayList<Double>[] means, ArrayList<Double>[] sds, String folderName) {
+        try {
+            File dir = new File(folderName);
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            
+            FileWriter writer1 = new FileWriter(String.format("%s\\mean.csv", folderName));
+            FileWriter writer2 = new FileWriter(String.format("%s\\sd.csv", folderName));
+            
+            for (int i = 0; i < means.length; i++) {
+                for (double mean : means[i]) {
+                    writer1.append(Double.toString(mean));
+                    writer1.append(',');
+                }
+                writer1.append('\n');
+                
+                for (double sd : sds[i]) {
+                    writer2.append(Double.toString(sd));
+                    writer2.append(',');
+                }
+                writer2.append('\n');
+            }
+            
+            writer1.flush();
+            writer2.flush();
+            writer1.close();
+            writer2.close();
+        } catch (IOException e) {
+            System.err.println("Error writing to file " + e.getCause().toString());
+        }
+    }
 }
