@@ -107,4 +107,29 @@ public class CsvReader {
             System.err.println("Error writing to file " + e.getCause().toString());
         }
     }
+    
+    public static void writeIterToFiles(ArrayList<Integer>[] iterations, String folderName) {
+        try {
+            File dir = new File(folderName);
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            
+            FileWriter writer = new FileWriter(String.format("%s\\iteration.csv", folderName));
+            
+            for (int i = 0; i < iterations.length; i++) {
+                for (int iteration : iterations[i]) {
+                    writer.append(Integer.toString(iteration));
+                    writer.append(',');
+                }
+                writer.append('\n');
+            }
+
+            //generate whatever data you want
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            System.err.println("Error writing to file " + e.getCause().toString());
+        }
+    }
 }

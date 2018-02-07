@@ -57,7 +57,9 @@ public class Main {
         int delta = 5; //incremental number of simulations
         //list of results from model
         ArrayList<HashMap<String, Double>>[] results = new ArrayList[k];
+        ArrayList<Integer>[] iterations = new ArrayList[k];
         Arrays.parallelSetAll(results, i -> new ArrayList<>());
+        Arrays.parallelSetAll(iterations, i -> new ArrayList<>());
 
         try {
             final double demandCoeff = 1.0, distanceCoeff = -0.2, lockerCoeff = -100;
@@ -74,6 +76,7 @@ public class Main {
                 count++;
                 //simulation part
                 for (int i = 0; i < k; i++) {
+                    iterations[i].add(count);
                     System.out.println(String.format("Design %d, performing %d replications", i + 1, Nnext[i] - Nlast[i]));
                     solver.setY(Arrays.stream(y[i]).sum());
                     IloConstraint[] binaryConstraints = solver.addBinaryConstraints(y[i]);
@@ -126,6 +129,7 @@ public class Main {
             }
             
             CsvReader.writeDataToFiles(results, "ocba");
+            CsvReader.writeIterToFiles(iterations, "ocba");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
