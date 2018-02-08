@@ -54,7 +54,7 @@ public class Main {
         int[] Nlast = new int[k], Nnext = new int[k]; //number of replications
         Arrays.fill(Nlast, 0);
         Arrays.fill(Nnext, n0);
-        int delta = 5; //incremental number of simulations
+        int delta = 2; //incremental number of simulations
         //list of results from model
         ArrayList<HashMap<String, Double>>[] results = new ArrayList[k];
         ArrayList<Integer>[] iterations = new ArrayList[k];
@@ -79,7 +79,7 @@ public class Main {
                 count++;
                 //simulation part
                 for (int i = 0; i < k; i++) {
-                    System.out.println(String.format("Design %d, performing %d replications", i + 1, Nnext[i] - Nlast[i]));
+                    System.out.println(String.format("Design %d, performing %d replications", i + 1, Math.max(0, Nnext[i] - Nlast[i])));
                     solver.setY(Arrays.stream(y[i]).sum());
                     IloConstraint[] binaryConstraints = solver.addBinaryConstraints(y[i]);
                     
@@ -87,8 +87,8 @@ public class Main {
                         iterations[i].add(count);
                         System.out.println(String.format("Iteration %d, simulating design %d, replication %d", count, i + 1, j + 1));
                         
-                        random.generateNormalVars(alpha, 0.0317725, 0.01);
-                        random.generateNormalVars(beta, 0.01588, 0.005);
+                        random.generateNormalVars(alpha, 0.0317725, 0.005);
+                        random.generateNormalVars(beta, 0.01588, 0.0025);
 
                         IloConstraint[] demandConstraints = solver.addDemandConstraints(alpha, beta);
 
@@ -134,9 +134,9 @@ public class Main {
                 System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
             }
             
-            CsvReader.writeDataToFiles(results, "ocba\\largesd");
-            CsvReader.writeIterToFiles(iterations, "ocba\\largesd");
-            CsvReader.writeMeanToFiles(means, sds, "ocba\\largesd");
+            CsvReader.writeDataToFiles(results, "ocba\\medsd");
+            CsvReader.writeIterToFiles(iterations, "ocba\\medsd");
+            CsvReader.writeMeanToFiles(means, sds, "ocba\\medsd");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
