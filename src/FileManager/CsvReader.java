@@ -165,4 +165,36 @@ public class CsvReader {
             System.err.println("Error writing to file " + e.getCause().toString());
         }
     }
+    
+    public static ArrayList<HashMap<String, Double>>[] readPrelimData(String folderName, int n0, int k) {
+        String line1 = "", line2 = "", line3 = "";
+        String cvsSplitBy = ",";
+        ArrayList<HashMap<String, Double>>[] data = new ArrayList[20];
+        
+        try {
+            BufferedReader br1 = new BufferedReader(new FileReader(String.format("%s\\demand.csv", folderName)));
+            BufferedReader br2 = new BufferedReader(new FileReader(String.format("%s\\distance.csv", folderName)));
+            BufferedReader br3 = new BufferedReader(new FileReader(String.format("%s\\locker.csv", folderName)));
+            for (int i = 0; i < k; i++) {
+                line1 = br1.readLine();
+                line2 = br2.readLine();
+                line3 = br3.readLine();
+                double[] entries1 = Arrays.stream(line1.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray(),
+                        entries2 = Arrays.stream(line2.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray(),
+                        entries3 = Arrays.stream(line3.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray();
+                for (int j = 0; j < n0; j++) {
+                    HashMap<String, Double> entry = new HashMap<>();
+                    entry.put("total", entries1[j] - 0.3 * entries2[j] - 150 * entries3[j]);
+                    entry.put("demand", entries1[j]);
+                    entry.put("distance", entries2[j]);
+                    entry.put("locker", entries3[j]);
+                }
+            }
+            
+            return data;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
