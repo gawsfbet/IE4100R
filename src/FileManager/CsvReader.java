@@ -169,13 +169,14 @@ public class CsvReader {
     public static ArrayList<HashMap<String, Double>>[] readPrelimData(String folderName, int n0, int k) {
         String line1 = "", line2 = "", line3 = "";
         String cvsSplitBy = ",";
-        ArrayList<HashMap<String, Double>>[] data = new ArrayList[20];
+        ArrayList<HashMap<String, Double>>[] data = new ArrayList[k];
         
         try {
             BufferedReader br1 = new BufferedReader(new FileReader(String.format("%s\\demand.csv", folderName)));
             BufferedReader br2 = new BufferedReader(new FileReader(String.format("%s\\distance.csv", folderName)));
             BufferedReader br3 = new BufferedReader(new FileReader(String.format("%s\\locker.csv", folderName)));
             for (int i = 0; i < k; i++) {
+                data[i] = new ArrayList<>();
                 line1 = br1.readLine();
                 line2 = br2.readLine();
                 line3 = br3.readLine();
@@ -188,6 +189,7 @@ public class CsvReader {
                     entry.put("demand", entries1[j]);
                     entry.put("distance", entries2[j]);
                     entry.put("locker", entries3[j]);
+                    data[i].add(entry);
                 }
             }
             

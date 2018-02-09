@@ -50,16 +50,16 @@ public class Main {
         }
         
         //OCBA parameters
-        int T = 250, n0 = 10, totalComputingBudget = k * n0; //max allowed computing budget and initial reps
+        int T = 300, n0 = 10, totalComputingBudget = k * n0; //max allowed computing budget and initial reps
         int[] Nlast = new int[k], Nnext = new int[k]; //number of replications
         Arrays.fill(Nlast, 0);
         Arrays.fill(Nnext, n0);
         int delta = 2; //incremental number of simulations
         //list of results from model
-        ArrayList<HashMap<String, Double>>[] results = new ArrayList[k];
+        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("ocba\\medsdold", n0, k);
         ArrayList<Integer>[] iterations = new ArrayList[k];
         ArrayList<Double>[] means = new ArrayList[k], sds = new ArrayList[k];
-        Arrays.parallelSetAll(results, i -> new ArrayList<>());
+        //Arrays.parallelSetAll(results, i -> new ArrayList<>());
         Arrays.parallelSetAll(iterations, i -> new ArrayList<>());
         Arrays.parallelSetAll(means, i -> new ArrayList<>());
         Arrays.parallelSetAll(sds, i -> new ArrayList<>());
@@ -70,12 +70,42 @@ public class Main {
             OCBASolver solver = new OCBASolver(a, b, d, e, h, l, p, C, S);
             solver.initVariablesAndOtherConstraints();
             
-            double[] J = new double[k]; //sample means
-            double[] s = new double[k]; //sample sd
+            double[] J = Arrays.stream(results).mapToDouble(result -> calculateMean(result)).toArray(); //sample means
+            double[] s = IntStream.range(0, k).mapToDouble(i -> calculateSD(results[i], J[i])).toArray(); //sample sd
+            IntStream.range(0, k).forEach(i -> {
+                means[i].add(J[i]);
+                sds[i].add(s[i]);
+            });
             
-            int count = 0;
+            int count = 1;
             
             while (Arrays.stream(Nnext).sum() < T) {
+                //allocation part
+                int best = maxIndex(J), ref;
+                IntStream.range(0, k).forEach(i -> Nlast[i] = Nnext[i]);
+                
+                totalComputingBudget += delta;
+                double[] ratios = new double[k];
+                if (best == 0) {
+                    ratios[1] = 1;
+                    ref = 1;
+                } else {
+                    ratios[0] = 1;
+                    ref = 0;
+                }
+                for (int i = 0; i < k; i++) {
+                    if (i == best || i == ref) continue;
+
+                    ratios[i] = ((s[i] * (J[best] - J[ref])) / (s[ref] * (J[best] - J[i]))) * ((s[i] * (J[best] - J[ref])) / (s[ref] * (J[best] - J[i])));
+                }
+                ratios[best] = s[best] * Math.sqrt(IntStream.range(0, k).filter(i -> i != best).mapToDouble(i -> (ratios[i] / s[i]) * (ratios[i] / s[i])).sum());
+  
+                double totalRatio = Arrays.stream(ratios).sum();
+                for (int i = 0; i < k; i++) {
+                    Nnext[i] = (int) Math.round(totalComputingBudget * ratios[i] / totalRatio);
+                }
+                System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
+                
                 count++;
                 //simulation part
                 for (int i = 0; i < k; i++) {
@@ -106,32 +136,6 @@ public class Main {
                     means[i].add(J[i]);
                     sds[i].add(s[i]);
                 }
-                
-                //allocation part
-                int best = maxIndex(J), ref;
-                IntStream.range(0, k).forEach(i -> Nlast[i] = Nnext[i]);
-                
-                totalComputingBudget += delta;
-                double[] ratios = new double[k];
-                if (best == 0) {
-                    ratios[1] = 1;
-                    ref = 1;
-                } else {
-                    ratios[0] = 1;
-                    ref = 0;
-                }
-                for (int i = 0; i < k; i++) {
-                    if (i == best || i == ref) continue;
-
-                    ratios[i] = ((s[i] * (J[best] - J[ref])) / (s[ref] * (J[best] - J[i]))) * ((s[i] * (J[best] - J[ref])) / (s[ref] * (J[best] - J[i])));
-                }
-                ratios[best] = s[best] * Math.sqrt(IntStream.range(0, k).filter(i -> i != best).mapToDouble(i -> (ratios[i] / s[i]) * (ratios[i] / s[i])).sum());
-  
-                double totalRatio = Arrays.stream(ratios).sum();
-                for (int i = 0; i < k; i++) {
-                    Nnext[i] = (int) Math.round(totalComputingBudget * ratios[i] / totalRatio);
-                }
-                System.out.println(String.format("Iteration %d complete, best design: %d", count, best + 1));
             }
             
             CsvReader.writeDataToFiles(results, "ocba\\medsd");
