@@ -56,7 +56,7 @@ public class Main {
         Arrays.fill(Nnext, n0);
         int delta = 2; //incremental number of simulations
         //list of results from model
-        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("ocba\\medsdold", n0, k);
+        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("ocba\\medsddelta5", n0, k);
         ArrayList<Integer>[] iterations = new ArrayList[k];
         ArrayList<Double>[] means = new ArrayList[k], sds = new ArrayList[k];
         //Arrays.parallelSetAll(results, i -> new ArrayList<>());
@@ -138,9 +138,9 @@ public class Main {
                 }
             }
             
-            CsvReader.writeDataToFiles(results, "ocba\\medsd");
-            CsvReader.writeIterToFiles(iterations, "ocba\\medsd");
-            CsvReader.writeMeanToFiles(means, sds, "ocba\\medsd");
+            CsvReader.writeDataToFiles(results, "ocba\\medsdnew");
+            CsvReader.writeIterToFiles(iterations, "ocba\\medsdnew");
+            CsvReader.writeMeanToFiles(means, sds, "ocba\\medsdnew");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
