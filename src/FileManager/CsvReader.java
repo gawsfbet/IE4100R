@@ -170,6 +170,8 @@ public class CsvReader {
         String line1 = "", line2 = "", line3 = "";
         String cvsSplitBy = ",";
         ArrayList<HashMap<String, Double>>[] data = new ArrayList[k];
+        double[] entries1, entries2, entries3;
+        HashMap<String, Double> entry;
         
         try {
             BufferedReader br1 = new BufferedReader(new FileReader(String.format("%s\\demand.csv", folderName)));
@@ -180,11 +182,11 @@ public class CsvReader {
                 line1 = br1.readLine();
                 line2 = br2.readLine();
                 line3 = br3.readLine();
-                double[] entries1 = Arrays.stream(line1.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray(),
-                        entries2 = Arrays.stream(line2.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray(),
-                        entries3 = Arrays.stream(line3.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray();
+                entries1 = Arrays.stream(line1.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray();
+                entries2 = Arrays.stream(line2.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray();
+                entries3 = Arrays.stream(line3.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray();
                 for (int j = 0; j < n0; j++) {
-                    HashMap<String, Double> entry = new HashMap<>();
+                    entry = new HashMap<>();
                     entry.put("total", entries1[j] - 0.3 * entries2[j] - 150 * entries3[j]);
                     entry.put("demand", entries1[j]);
                     entry.put("distance", entries2[j]);
