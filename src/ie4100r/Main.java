@@ -56,7 +56,7 @@ public class Main {
         Arrays.fill(Nnext, n0);
         int delta = 2; //incremental number of simulations
         //list of results from model
-        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("ocba\\medsddelta5", n0, k);
+        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("ocba\\medsdold", n0, k);
         ArrayList<Integer>[] iterations = new ArrayList[k];
         ArrayList<Double>[] means = new ArrayList[k], sds = new ArrayList[k];
         //Arrays.parallelSetAll(results, i -> new ArrayList<>());
@@ -65,7 +65,7 @@ public class Main {
         Arrays.parallelSetAll(sds, i -> new ArrayList<>());
 
         try {
-            final double demandCoeff = 1.0, distanceCoeff = -0.3, lockerCoeff = -150;
+            final double demandCoeff = 1.0, distanceCoeff = -0.3, lockerCoeff = -100;
 
             OCBASolver solver = new OCBASolver(a, b, d, e, h, l, p, C, S);
             solver.initVariablesAndOtherConstraints();
