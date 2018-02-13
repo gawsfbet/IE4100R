@@ -184,7 +184,7 @@ public class CsvReader {
                         entries3 = Arrays.stream(line3.split(cvsSplitBy)).mapToDouble(Double::parseDouble).toArray();
                 for (int j = 0; j < n0; j++) {
                     HashMap<String, Double> entry = new HashMap<>();
-                    entry.put("total", entries1[j] - 0.3 * entries2[j] - 150 * entries3[j]);
+                    entry.put("total", entries1[j] - 0.3 * entries2[j] - 100 * entries3[j]);
                     entry.put("demand", entries1[j]);
                     entry.put("distance", entries2[j]);
                     entry.put("locker", entries3[j]);
