@@ -50,13 +50,13 @@ public class Main {
         }
         
         //OCBA parameters
-        int T = 300, n0 = 10, totalComputingBudget = k * n0; //max allowed computing budget and initial reps
+        int T = 500, n0 = 10, totalComputingBudget = k * n0; //max allowed computing budget and initial reps
         int[] Nlast = new int[k], Nnext = new int[k]; //number of replications
         Arrays.fill(Nlast, 0);
         Arrays.fill(Nnext, n0);
         int delta = 2; //incremental number of simulations
         //list of results from model
-        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("ocba\\medsdold", n0, k);
+        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("simulation\\ocba\\medsd", n0, k);
         ArrayList<Integer>[] iterations = new ArrayList[k];
         ArrayList<Double>[] means = new ArrayList[k], sds = new ArrayList[k];
         //Arrays.parallelSetAll(results, i -> new ArrayList<>());
@@ -138,9 +138,9 @@ public class Main {
                 }
             }
             
-            CsvReader.writeDataToFiles(results, "ocba\\medsdnew");
-            CsvReader.writeIterToFiles(iterations, "ocba\\medsdnew");
-            CsvReader.writeMeanToFiles(means, sds, "ocba\\medsdnew");
+            CsvReader.writeDataToFiles(results, "simulation\\medsd");
+            CsvReader.writeIterToFiles(iterations, "simulation\\medsd");
+            CsvReader.writeMeanToFiles(means, sds, "simulation\\medsd");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
