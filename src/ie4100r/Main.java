@@ -56,7 +56,7 @@ public class Main {
         Arrays.fill(Nnext, n0);
         int delta = 2; //incremental number of simulations
         //list of results from model
-        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("simulation\\ocba\\medsd", n0, k);
+        ArrayList<HashMap<String, Double>>[] results = CsvReader.readPrelimData("simulation\\ocba\\smallsd", n0, k);
         ArrayList<Integer>[] iterations = new ArrayList[k];
         ArrayList<Double>[] means = new ArrayList[k], sds = new ArrayList[k];
         //Arrays.parallelSetAll(results, i -> new ArrayList<>());
@@ -117,8 +117,8 @@ public class Main {
                         iterations[i].add(count);
                         System.out.println(String.format("Iteration %d, simulating design %d, replication %d", count, i + 1, j + 1));
                         
-                        random.generateNormalVars(alpha, 0.0317725, 0.005);
-                        random.generateNormalVars(beta, 0.01588, 0.0025);
+                        random.generateNormalVars(alpha, 0.0317725, 0.0025);
+                        random.generateNormalVars(beta, 0.01588, 0.00125);
 
                         IloConstraint[] demandConstraints = solver.addDemandConstraints(alpha, beta);
 
@@ -138,9 +138,9 @@ public class Main {
                 }
             }
             
-            CsvReader.writeDataToFiles(results, "simulation\\medsd");
-            CsvReader.writeIterToFiles(iterations, "simulation\\medsd");
-            CsvReader.writeMeanToFiles(means, sds, "simulation\\medsd");
+            CsvReader.writeDataToFiles(results, "simulation\\smallsd");
+            CsvReader.writeIterToFiles(iterations, "simulation\\smallsd");
+            CsvReader.writeMeanToFiles(means, sds, "simulation\\smallsd");
         } catch (IloException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
